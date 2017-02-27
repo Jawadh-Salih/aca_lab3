@@ -1,2 +1,0 @@
-/home/jawadhsr/ClionProjects/aca_lab3/CMakeFiles/edit_cache.dir
-/home/jawadhsr/ClionProjects/aca_lab3/CMakeFiles/rebuild_cache.dir
