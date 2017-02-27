@@ -11,3 +11,4 @@ set(SOURCE_FILES
         include/util.h)
 
 add_executable(aca_lab3 ${SOURCE_FILES})
+target_link_libraries(aca_lab3 m)

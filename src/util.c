@@ -3,9 +3,9 @@
 //
 
 #include "../include/util.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 
 // N = (100zs/rx)^2, r - accuracy (5%), s - standard deviation, x - mean, z = 1.960 (95%) - TAKE THE CEIL
@@ -28,7 +28,7 @@ double mean(double times[], int numSamples) {
     return (double) sum / numSamples;
 }
 
-double standardDeviation(float times[], int numSamples) {
+double standardDeviation(double times[], int numSamples) {
     double u = mean(times,numSamples);
     double variance = 0;
     for (int i = 0; i < numSamples; ++i) {
