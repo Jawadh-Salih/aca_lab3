@@ -3,7 +3,7 @@
 //
 #include <stdio.h>
 #include <pmmintrin.h>
-#include "util.h"
+#include "../include/util.h"
 static void
 matvec_simple ( int n , float vec_c [ n ] ,
                 const float mat_a [ n ] [ n ] , const float vec_b [ n ] )
