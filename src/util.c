@@ -74,11 +74,3 @@ float elapsed_time_msec(struct timespec *begin, struct timespec *end,
     }
     return (float) (*sec) * 1000 + ((float) (*nsec)) / 1000000.0;
 }
-
-int main(){
-
-    printf("Jawadhja");
-    example();
-
-
-}
