@@ -3,14 +3,13 @@
  */
 
 #include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include<pmmintrin.h>
-#include <assert.h>
-//#include<smmintrin.h>
-//#include<tmmintrin.h>
-//#include<xmmintrin.h>
-//#include <xmmintrin.h>	// Need this for SSE compiler intrinsics
-//#include <math.h>		// Needed for sqrt in CPU-only version
+#include <getopt.h>
+#include <time.h>
+#include "util.h"
+#include "matvec_drivers.h"
+
 
 static void matvec_unrolled(int n, float vec_c[n], const float mat_a[n][n], const float vec_b[n]) {
     for (int i = 0; i < n; i++) {
@@ -45,8 +44,8 @@ static void matvec_unrolled_sse(int n, float *vec_c, const float mat_a[n][n], co
             // output vector and for that we need 16x16 block from input matrix and 16 length from input vector
             // any idea
             __m128 zero_v = _mm_setzero_ps();
-            __m128 sm0 = _mm_hadd_ps(m0,zero_v);
-            __m128 rslt = _mm_hadd_ps(sm0,zero_v);
+            __m128 sm0 = _mm_hadd_ps(m0, zero_v);
+            __m128 rslt = _mm_hadd_ps(sm0, zero_v);
             printf("Horizontal addition ok\n");
 
             _mm_storeu_ps(&vec_c[i], rslt);
@@ -54,7 +53,7 @@ static void matvec_unrolled_sse(int n, float *vec_c, const float mat_a[n][n], co
     }
 }
 
-static void test(int n, float *vec_c, const float ** mat_a, const float * vec_b) {
+static void test(int n, float *vec_c, const float **mat_a, const float *vec_b) {
 
     __m128 x0 = _mm_loadu_ps(&vec_b[0]);
     printf("Loading vector ok\n");
@@ -67,32 +66,90 @@ static void test(int n, float *vec_c, const float ** mat_a, const float * vec_b)
 
 int main(int argc, char *argv[]) {
     printf("Starting calculation...\n");
-    int n = 4;
-    float mat[4][4] = {{1, 2, 3, 4},
-                       {0, 0, 0, 0},
-                       {0, 0, 0, 0},
-                       {0, 0, 0, 0}};
-    float vec[4] = {1, 1, 1, 1};
-    float vec_seq[4]={0};
-    float vec_sse[4]={0};
+    int c, n = 4;
+    const float ** mat0, **mat1, *in_vec;
+    float *out_vec;
 
-    printf("Loop unrolled Answer\n");
-    matvec_unrolled(n, vec_seq, mat, vec);
-    for (int i = 0; i < n; ++i) {
-        printf("%f ", vec_seq[i]);
+
+    short mat_vec_ver = 0, mat_mat_ver = 0, c_ver = 0, sse_ver = 0, a_vec_ver = 0;
+
+    while ((c = getopt(argc, argv, "n:hvmcsa")) != -1) {
+        switch (c) {
+            case 'n':
+                n = atoi(optarg);
+                break;
+            case 'v':
+                mat_vec_ver = 1;
+                break;
+            case 'c':
+                c_ver = 1;
+                break;
+            case 's':
+                sse_ver = 1;
+                break;
+            case 'a':
+                a_vec_ver = 1;
+                break;
+            case 'm':
+                mat_mat_ver = 1;
+                break;
+            case 'h':
+                printf("-m\t\t\t-\trun the matrix X matrix version.\n");
+                printf("-v\t\t\t-\trun the matrix X vector version.\n");
+                printf("-c\t\t\t-\trun the cpu version.\n");
+                printf("-s\t\t\t-\trun the sse version.\n");
+                printf("-a\t\t\t-\trun the auto vectorized version.\n");
+                printf("-h\t\t\t-\tShow this menu\n");
+                printf("example for the assignment.\n");
+                printf("eg : ./aca_lab3 -n 100 -v\n");
+                printf("eg : ./aca_lab3 -n 100 -m\n");
+                printf("eg : ./aca_lab3 -h\n");
+                break;
+            case '?':
+                if (optopt == 'n') {
+                    fprintf(stderr, "Option -n requires an integer point argument\n");
+                } else {
+                    fprintf(stderr, "Unknown option character\n");
+                }
+                return 1;
+            default:
+                abort();
+        }
     }
-    printf("\nLoop unrolled simple -- OK\n");
+    // matrix creation
+    mat0 = matrixCreationNByN(n);
 
-    printf("\n\nLoop unrolled SSE calculation\n");
-//    test(n, vec_sse, mat, vec);
-    matvec_unrolled_sse(n, vec_sse, mat, vec);
-    printf("Loop unrolled SSE3  Answer\n");
-    for (int i = 0; i < n; ++i) {
-        printf("%f ", vec_sse[i]);
+    if (mat_vec_ver) {
+        printf("Program will create %d x %d matrix and a %dx1 vector for calculations\n", n, n, n);
+        // vector creation
+        in_vec = vectorCreation(n);
+        printf("Input Matrix\n");
+        printNByNMat(mat0, n);
+        printf("Input Vector\n");
+        printVector(in_vec, n);
+        // run 10 times get the average time
+        out_vec = (float *) malloc(sizeof(float)*n);
+        if(c_ver) {
+            printf("Running simple version\n");
+            driveMatVecCPU(mat0, in_vec, out_vec, n);
+            printf("Output Vector\n");
+            printVector(out_vec, n);
+        }
+        if(sse_ver){
+            printf("Running sse version\n");
+        }
+        if(a_vec_ver) {
+            printf("Running auto vectorized version\n");
+
+        }
+        free((float *)in_vec);
+        free((float *)out_vec);
+    } else if (mat_mat_ver) {
+        printf("Program will create two %d x %d matrices for calculations\n", n, n);
+        mat1 = matrixCreationNByN(n);
+        freeNByNMat((float **)mat1,n);
     }
 
-
-    printf("\nLoop unrolled SSE3  -- OK\n");
-    printf("Programme ran...\n");
+    freeNByNMat((float **)mat0, n);
     return 0;
 }
