@@ -17,7 +17,7 @@ void test(int n, float *vec_c, const float **mat_a, const float *vec_b) {
 
 }
 
-void matvec_unrolled_sse_quite(int n, float *vec_c, const float mat_a[n][n], const float vec_b[n]) {
+void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const float vec_b[n]) {
 
     // NOTE : Matrix and Vector both must have dimensions which are multiples of 4
     for (int i = 0; i < n; i += 1) {

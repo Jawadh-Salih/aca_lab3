@@ -7,4 +7,6 @@
 
 void driveMatVecCPU(const float ** mat, const float * vec_in, float * vec_out, int n);
 
+void driveMatVecSSE(const float **mat, const float *vec_in, float *vec_out, int n);
+
 #endif //ACA_LAB3_MATVEC_DRIVERS_H
