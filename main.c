@@ -5,7 +5,7 @@
 #include <stdio.h>
 //#include <stdlib.h>
 #include<pmmintrin.h>
-#include <assert.h>
+//#include <assert.h>
 //#include<smmintrin.h>
 //#include<tmmintrin.h>
 //#include<xmmintrin.h>
@@ -26,9 +26,12 @@ static void matvec_unrolled(int n, float vec_c[n], const float mat_a[n][n], cons
 static void matvec_unrolled_sse(int n, float *vec_c, const float mat_a[n][n], const float vec_b[n]) {
 
     // NOTE : Matrix and Vector both must have dimensions which are multiples of 4
-    for (int i = 0; i < n; i += 4) {
+    for (int i = 0; i < n; i += 1) {
         for (int j = 0; j < n; j += 4) {
             // load the vector
+
+            __m128 temp = _mm_loadu_ps(&vec_c[i]);
+
             __m128 x0 = _mm_loadu_ps(&vec_b[j]);
             printf("Loading vector ok\n");
 
@@ -47,6 +50,7 @@ static void matvec_unrolled_sse(int n, float *vec_c, const float mat_a[n][n], co
             __m128 zero_v = _mm_setzero_ps();
             __m128 sm0 = _mm_hadd_ps(m0,zero_v);
             __m128 rslt = _mm_hadd_ps(sm0,zero_v);
+            rslt = _mm_add_ps(rslt,temp);
             printf("Horizontal addition ok\n");
 
             _mm_storeu_ps(&vec_c[i], rslt);
@@ -67,14 +71,18 @@ static void test(int n, float *vec_c, const float ** mat_a, const float * vec_b)
 
 int main(int argc, char *argv[]) {
     printf("Starting calculation...\n");
-    int n = 4;
-    float mat[4][4] = {{1, 2, 3, 4},
-                       {0, 0, 0, 0},
-                       {0, 0, 0, 0},
-                       {0, 0, 0, 0}};
-    float vec[4] = {1, 1, 1, 1};
-    float vec_seq[4]={0};
-    float vec_sse[4]={0};
+    int n = 8;
+    float mat[8][8] = {{1, 2, 3, 4,1, 2, 3, 4},
+                       {0, 0, 0, 0,1, 2, 3, 4},
+                       {0, 0, 0, 0,1, 2, 3, 4},
+                       {0, 0, 0, 0,1, 2, 3, 4},
+                       {1, 2, 3, 4,1, 2, 3, 4},
+                       {0, 0, 0, 0,1, 2, 3, 4},
+                       {0, 0, 0, 0,1, 2, 3, 4},
+                       {0, 0, 0, 0,1, 2, 3, 4}};
+    float vec[8] = {1, 1, 1, 1,1, 1, 1, 1};
+    float vec_seq[8]={0};
+    float vec_sse[8]={0};
 
     printf("Loop unrolled Answer\n");
     matvec_unrolled(n, vec_seq, mat, vec);
