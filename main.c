@@ -5,6 +5,7 @@
 #include <stdio.h>
 //#include <stdlib.h>
 #include<pmmintrin.h>
+#include <assert.h>
 //#include<smmintrin.h>
 //#include<tmmintrin.h>
 //#include<xmmintrin.h>
@@ -24,29 +25,31 @@ static void matvec_unrolled(int n, float vec_c[n], const float mat_a[n][n], cons
 
 static void matvec_unrolled_sse(int n, float *vec_c, const float mat_a[n][n], const float vec_b[n]) {
 
-    for (int i = 0; i < n; i++) {
+    // NOTE : Matrix and Vector both must have dimensions which are multiples of 4
+    for (int i = 0; i < n; i += 4) {
         for (int j = 0; j < n; j += 4) {
             // load the vector
             __m128 x0 = _mm_loadu_ps(&vec_b[j]);
-//            __m128 oldRes = _mm_loadu_ps(&vec_c[i]);
             printf("Loading vector ok\n");
 
             // load the matirx mat_a current section to a v0-v1 four vectors
             __m128 v0 = _mm_loadu_ps(&mat_a[i][j]);
             printf("Loading matrix ok\n");
 
-//            // multiplication
+            // multiplication
             __m128 m0 = _mm_mul_ps(x0, v0);
             printf("Multiplication ok\n");
 
-//            // reduction
-//            __m128 sm0 = _mm_hadd_ps(m0,m1);
-//            __m128 sm1 = _mm_hadd_ps(m2,m3);
-//            __m128 rslt = _mm_hadd_ps(sm0,sm1);
-//            printf("Horizontal addition ok\n");
+            // reduction
+            // TODO : We are wasting 3 locations of the rslts vector we can process 4 outputs for
+            // output vector and for that we need 16x16 block from input matrix and 16 length from input vector
+            // any idea
+            __m128 zero_v = _mm_setzero_ps();
+            __m128 sm0 = _mm_hadd_ps(m0,zero_v);
+            __m128 rslt = _mm_hadd_ps(sm0,zero_v);
+            printf("Horizontal addition ok\n");
 
-//            __m128 newSum = _mm_add_ps(oldRes,v0);
-            _mm_storeu_ps(&vec_c[i], m0);
+            _mm_storeu_ps(&vec_c[i], rslt);
         }
     }
 }
@@ -73,14 +76,17 @@ int main(int argc, char *argv[]) {
     float vec_seq[4]={0};
     float vec_sse[4]={0};
 
+    printf("Loop unrolled Answer\n");
     matvec_unrolled(n, vec_seq, mat, vec);
     for (int i = 0; i < n; ++i) {
         printf("%f ", vec_seq[i]);
     }
     printf("\nLoop unrolled simple -- OK\n");
 
-    test(n, vec_sse, mat, vec);
-    printf("\nLoop unrolled SSE3  -- OK\n");
+    printf("\n\nLoop unrolled SSE calculation\n");
+//    test(n, vec_sse, mat, vec);
+    matvec_unrolled_sse(n, vec_sse, mat, vec);
+    printf("Loop unrolled SSE3  Answer\n");
     for (int i = 0; i < n; ++i) {
         printf("%f ", vec_sse[i]);
     }
