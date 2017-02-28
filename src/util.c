@@ -81,7 +81,6 @@ const float **matrixCreationNByN(int n) {
     for (int i = 0; i < n; ++i) {
         mat[i] = (float *) malloc(sizeof(float) * n);
     }
-    srand(time(NULL));
     for (int j = 0; j < n; ++j) {
         for (int i = 0; i < n; ++i) {
             mat[j][i] = rand() % 10;
@@ -110,7 +109,6 @@ void printNByNMat(const float **mat, int n) {
 
 const float *vectorCreation(int n) {
     float *vec = (float *) malloc(sizeof(float) * n);
-    srand(time(NULL));
     for (int j = 0; j < n; ++j) {
         vec[j] = rand() % 10;
     }

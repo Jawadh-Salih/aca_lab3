@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
     int c, n = 4;
     const float ** mat0, **mat1, *in_vec;
     float *out_vec;
-
+    time_t t;
+    srand((unsigned) time(&t));
 
     short mat_vec_ver = 0, mat_mat_ver = 0, c_ver = 0, sse_ver = 0, a_vec_ver = 0;
 
