@@ -17,9 +17,11 @@ void driveMatVecCPU(const float ** mat, const float * vec_in, float * vec_out, i
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
+    time_t t;
     float times[10] = {};
     int req_n;
     for (int i = 0; i < 10; ++i) {
+        srand((unsigned) time(&t));
         GET_TIME(t0);
         matvec_simple(n, vec_out, mat, vec_in);
         GET_TIME(t1);
@@ -50,9 +52,11 @@ void driveMatVecSSE(const float **mat, const float *vec_in, float *vec_out, int 
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
+    time_t t;
     float times[10] = {};
     int req_n;
-    for (int i = 0; i < 10; ++i) { GET_TIME(t0);
+    for (int i = 0; i < 10; ++i) {
+        srand((unsigned) time(&t));GET_TIME(t0);
         matvec_unrolled_sse_quite(n, vec_out, mat, vec_in);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
