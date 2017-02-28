@@ -9,7 +9,7 @@ set(SOURCE_FILES
         src/matvec.c
         src/matvec_AUTO.c
         src/util.c
-        include/util.h)
+        include/util.h src/sse_methods.c include/sse_methods.h)
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse3")
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3")
