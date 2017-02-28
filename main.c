@@ -3,109 +3,90 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include<smmintrin.h>
-#include<tmmintrin.h>
-#include<xmmintrin.h>
+//#include <stdlib.h>
 #include<pmmintrin.h>
-#include <xmmintrin.h>	// Need this for SSE compiler intrinsics
-#include <math.h>		// Needed for sqrt in CPU-only version
+//#include<smmintrin.h>
+//#include<tmmintrin.h>
+//#include<xmmintrin.h>
+//#include <xmmintrin.h>	// Need this for SSE compiler intrinsics
+//#include <math.h>		// Needed for sqrt in CPU-only version
 
-static void matvec_unrolled(int n,float vec_c[n], const float mat_a[n][n], const float vec_b[n]){
-    for(int i=0;i<n;i++){
-        for(int j=0;j<n;j+=4){
-            vec_c[i] += mat_a[i][j]*vec_b[j]
-                        + mat_a[i][j+1]*vec_b[j+1]
-                        + mat_a[i][j+2]*vec_b[j+2]
-                        + mat_a[i][j+3]*vec_b[j+3];
+static void matvec_unrolled(int n, float vec_c[n], const float mat_a[n][n], const float vec_b[n]) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j += 4) {
+            vec_c[i] += mat_a[i][j] * vec_b[j]
+                        + mat_a[i][j + 1] * vec_b[j + 1]
+                        + mat_a[i][j + 2] * vec_b[j + 2]
+                        + mat_a[i][j + 3] * vec_b[j + 3];
         }
     }
 }
 
-//int main(){
-//    float *pResult = (float*) _aligned_malloc(length * sizeof(float), n);
-//    __m128 x;
-//
-//}
+static void matvec_unrolled_sse(int n, float *vec_c, const float mat_a[n][n], const float vec_b[n]) {
 
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j += 4) {
+            // load the vector
+            __m128 x0 = _mm_loadu_ps(&vec_b[j]);
+//            __m128 oldRes = _mm_loadu_ps(&vec_c[i]);
+            printf("Loading vector ok\n");
 
+            // load the matirx mat_a current section to a v0-v1 four vectors
+            __m128 v0 = _mm_loadu_ps(&mat_a[i][j]);
+            printf("Loading matrix ok\n");
 
-int main(int argc, char* argv[])
-{
-    printf("Starting calculation...\n");
+//            // multiplication
+            __m128 m0 = _mm_mul_ps(x0, v0);
+            printf("Multiplication ok\n");
 
-    const int length = 64000;
+//            // reduction
+//            __m128 sm0 = _mm_hadd_ps(m0,m1);
+//            __m128 sm1 = _mm_hadd_ps(m2,m3);
+//            __m128 rslt = _mm_hadd_ps(sm0,sm1);
+//            printf("Horizontal addition ok\n");
 
-    // We will be calculating Y = Sin(x) / x, for x = 1->64000
-
-    // If you do not properly align your data for SSE instructions, you may take a huge performance hit.
-
-    float *pResult = (float*) _mm_malloc(length * sizeof(float), 16);	// align to 16-byte for SSE
-
-    __m128 x;
-    __m128 xDelta = _mm_set1_ps(4.0f);		// Set the xDelta to (4,4,4,4)
-    __m128 *pResultSSE = (__m128*) pResult;
-
-
-    const int SSELength = length / 4;
-
-    for (int stress = 0; stress < 100000; stress++)	// lots of stress loops so we can easily use a stopwatch
-
-    {
-#define TIME_SSE	// Define this if you want to run with SSE
-#ifdef TIME_SSE
-        x = _mm_set_ps(4.0f, 3.0f, 2.0f, 1.0f);	// Set the initial values of x to (4,3,2,1)
-
-        for (int i=0; i < SSELength; i++)
-        {
-
-            __m128 xSqrt = _mm_sqrt_ps(x);
-            // Note! Division is slow. It's actually faster to take the reciprocal of a number and multiply
-            // Also note that Division is more accurate than taking the reciprocal and multiplying
-
-#define USE_DIVISION_METHOD
-#ifdef USE_FAST_METHOD
-            __m128 xRecip = _mm_rcp_ps(x);
-
-			pResultSSE[i] = _mm_mul_ps(xRecip, xSqrt);
-#endif //USE_FAST_METHOD
-#ifdef USE_DIVISION_METHOD
-            pResultSSE[i] = _mm_div_ps(xSqrt, x);
-
-#endif	// USE_DIVISION_METHOD
-
-            // NOTE! Sometimes, the order in which things are done in SSE may seem reversed.
-            // When the command above executes, the four floating elements are actually flipped around
-            // We have already compensated for that flipping by setting the initial x vector to (4,3,2,1) instead of (1,2,3,4)
-
-            x = _mm_add_ps(x, xDelta);	// Advance x to the next set of numbers
-
+//            __m128 newSum = _mm_add_ps(oldRes,v0);
+            _mm_storeu_ps(&vec_c[i], m0);
         }
-#endif	// TIME_SSE
-#ifndef TIME_SSE
-        float xFloat = 1.0f;
-		for (int i=0 ; i < length; i++)
-		{
+    }
+}
 
-			pResult[i] = sqrt(xFloat) / xFloat;	// Even though division is slow, there are no intrinsic functions like there are in SSE
-			xFloat += 1.0f;
-		}
+static void test(int n, float *vec_c, const float ** mat_a, const float * vec_b) {
 
-#endif	// !TIME_SSE
+    __m128 x0 = _mm_loadu_ps(&vec_b[0]);
+    printf("Loading vector ok\n");
+//    __m128 two_v = _mm_set1_ps(2);
+    printf("Storing vector ok\n");
+    _mm_storeu_ps(&vec_c[0], x0);
+
+
+}
+
+int main(int argc, char *argv[]) {
+    printf("Starting calculation...\n");
+    int n = 4;
+    float mat[4][4] = {{1, 2, 3, 4},
+                       {0, 0, 0, 0},
+                       {0, 0, 0, 0},
+                       {0, 0, 0, 0}};
+    float vec[4] = {1, 1, 1, 1};
+    float vec_seq[4]={0};
+    float vec_sse[4]={0};
+
+    matvec_unrolled(n, vec_seq, mat, vec);
+    for (int i = 0; i < n; ++i) {
+        printf("%f ", vec_seq[i]);
+    }
+    printf("\nLoop unrolled simple -- OK\n");
+
+    test(n, vec_sse, mat, vec);
+    printf("\nLoop unrolled SSE3  -- OK\n");
+    for (int i = 0; i < n; ++i) {
+        printf("%f ", vec_sse[i]);
     }
 
-    // To prove that the program actually worked
-    for (int i=0; i < 20; i++)
-    {
 
-        printf("Result[%d] = %f\n", i, pResult[i]);
-    }
-
-    // Results for my particular system
-    // 23.75 seconds for SSE with reciprocal/multiplication method
-    // 38.5 seconds for SSE with division method
-    // 301.5 seconds for CPU
-
-
+    printf("\nLoop unrolled SSE3  -- OK\n");
+    printf("Programme ran...\n");
     return 0;
 }
