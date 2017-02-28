@@ -156,6 +156,10 @@ int main(int argc, char *argv[]) {
         }
         if(sse_ver){
             printf("Running sse version\n");
+            printf("Running simple version\n");
+            driveMatVecSSE(mat0, in_vec, out_vec, n);
+            printf("Output Vector\n");
+            printVector(out_vec, n);
         }
         if(a_vec_ver) {
             printf("Running auto vectorized version\n");
