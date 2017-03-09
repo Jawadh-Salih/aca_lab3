@@ -46,3 +46,25 @@ void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const f
         }
     }
 }
+
+void matmat_listing7_sse(int n, float **mat_c,
+                         const float **mat_a, const float **mat_b) {
+
+    for (int i = 0; i < n; i += 1) {
+        for (int j = 0; j < n; j += 1) {
+            // load the vector
+            for (int k = 0; k < n; k = k + 4) {
+
+                __m128 temp = _mm_loadu_ps(&mat_c[i][j]);
+                __m128 x0 = _mm_loadu_ps(&mat_b[k][j]);
+                __m128 v0 = _mm_loadu_ps(&mat_a[i][k]);
+                __m128 m0 = _mm_mul_ps(x0, v0);
+                __m128 zero_v = _mm_setzero_ps();
+                __m128 sm0 = _mm_hadd_ps(m0, zero_v);
+                __m128 rslt = _mm_hadd_ps(sm0, zero_v);
+                rslt = _mm_add_ps(rslt, temp);
+                _mm_storeu_ps(&mat_c[i][j], rslt);
+            }
+        }
+    }
+}
