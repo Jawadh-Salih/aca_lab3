@@ -16,10 +16,10 @@
 int main(int argc, char *argv[]) {
     printf("Starting calculation...\n");
     int c, n = 4;
-    const float **mat0, **mat1, *in_vec;
-    float *out_vec_simple;
-    float *out_vec_sse;
-    float *out_vec_auto;
+    const float **mat0 = NULL, **mat1 = NULL, *in_vec = NULL;
+    float *out_vec_simple = NULL;
+    float *out_vec_sse = NULL;
+    float *out_vec_auto = NULL;
     time_t t;
     srand((unsigned) time(&t));
 
@@ -51,14 +51,20 @@ int main(int argc, char *argv[]) {
             case 'h':
                 printf("-m\t\t\t-\trun the matrix X matrix version.\n");
                 printf("-v\t\t\t-\trun the matrix X vector version.\n");
-                printf("-c\t\t\t-\trun the cpu version.\n");
+                printf("-c\t\t\t-\trun the simple version.\n");
                 printf("-s\t\t\t-\trun the sse version.\n");
                 printf("-a\t\t\t-\trun the auto vectorized version.\n");
+                printf("-t\t\t\t-\trun all versions and verify against simple version.\n");
                 printf("-h\t\t\t-\tShow this menu\n");
                 printf("example for the assignment.\n");
-                printf("eg : ./aca_lab3 -n 100 -v\n");
-                printf("eg : ./aca_lab3 -n 100 -m\n");
-                printf("eg : ./aca_lab3 -h\n");
+                printf("eg : ./aca_lab3 -n 100 -vc\n");
+                printf("\t Run with matrix size 100x100(n), vector size 100(n), simple version(c) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 10 -vs\n");
+                printf("\t Run with matrix size 10x10(n), vector size 10(n), sse version(s) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 100 -vt\n");
+                printf("\t Run with matrix size 100x100(n), vector size 100(n), verification phase(t) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 100 -mc\n");
+                printf("\t Run with two matrices of size 100x100(n) simple version(c) - matrix-matrix (m)\n");
                 break;
             case '?':
                 if (optopt == 'n') {
@@ -78,6 +84,7 @@ int main(int argc, char *argv[]) {
         printf("Program will create %d x %d matrix and a %dx1 vector for calculations\n", n, n, n);
         // vector creation
         in_vec = vectorCreation(n);
+        //TODO : Remove from release
 //        printf("Input Matrix\n");
 //        printNByNMat(mat0, n);
 //        printf("Input Vector\n");
@@ -87,16 +94,17 @@ int main(int argc, char *argv[]) {
             out_vec_simple = (float *) malloc(sizeof(float) * n);
             printf("\nRunning simple version\n");
             driveMatVecCPU(mat0, in_vec, out_vec_simple, n);
+            //TODO : Remove from release
             printf("Output Vector\n");
-//            printVector(out_vec_simple, n);
+            printVector(out_vec_simple, n);
         }
         if (sse_ver || test) {
             out_vec_sse = (float *) malloc(sizeof(float) * n);
             printf("\nRunning sse version\n");
-            printf("Running simple version\n");
             driveMatVecSSE(mat0, in_vec, out_vec_sse, n);
+            //TODO : Remove from release
             printf("Output Vector\n");
-//            printVector(out_vec_sse, n);
+            printVector(out_vec_sse, n);
         }
         if (a_vec_ver || test) {
             out_vec_auto = (float *) malloc(sizeof(float) * n);
@@ -129,15 +137,28 @@ int main(int argc, char *argv[]) {
                 printf("\tAuto vectorized version verified against simple version - OK\n");
             }
         }
-        free((float *) out_vec_simple);
-        free((float *) out_vec_sse);
-        free((float *) out_vec_auto);
+        if (out_vec_simple != NULL) {
+            free((float *) out_vec_simple);
+            out_vec_simple = NULL;
+        }
+        if (out_vec_sse != NULL) {
+            free((float *) out_vec_sse);
+            out_vec_sse = NULL;
+        }
+        if (out_vec_auto != NULL) {
+            free((float *) out_vec_auto);
+            out_vec_auto = NULL;
+        }
     } else if (mat_mat_ver) {
         printf("Program will create two %d x %d matrices for calculations\n", n, n);
         mat1 = matrixCreationNByN(n);
         freeNByNMat((float **) mat1, n);
+
+
+        mat1 = NULL;
     }
 
     freeNByNMat((float **) mat0, n);
+    mat0 = NULL;
     return 0;
 }
