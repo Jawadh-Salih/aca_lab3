@@ -11,15 +11,16 @@
 #include <float.h>
 #include "util.h"
 #include "matvec_drivers.h"
+#include "matmat_drivers.h"
 
 
 int main(int argc, char *argv[]) {
     printf("Starting calculation...\n");
     int c, n = 4;
     const float **mat0 = NULL, **mat1 = NULL, *in_vec = NULL;
-    float *out_vec_simple = NULL;
-    float *out_vec_sse = NULL;
-    float *out_vec_auto = NULL;
+    float **mat_ans_c = NULL, **mat_ans_sse = NULL;
+    float *out_vec_simple = NULL, *out_vec_sse = NULL, *out_vec_auto = NULL;
+
     time_t t;
     srand((unsigned) time(&t));
 
@@ -95,16 +96,16 @@ int main(int argc, char *argv[]) {
             printf("\nRunning simple version\n");
             driveMatVecCPU(mat0, in_vec, out_vec_simple, n);
             //TODO : Remove from release
-            printf("Output Vector\n");
-            printVector(out_vec_simple, n);
+//            printf("Output Vector\n");
+//            printVector(out_vec_simple, n);
         }
         if (sse_ver || test) {
             out_vec_sse = (float *) malloc(sizeof(float) * n);
             printf("\nRunning sse version\n");
             driveMatVecSSE(mat0, in_vec, out_vec_sse, n);
             //TODO : Remove from release
-            printf("Output Vector\n");
-            printVector(out_vec_sse, n);
+//            printf("Output Vector\n");
+//            printVector(out_vec_sse, n);
         }
         if (a_vec_ver || test) {
             out_vec_auto = (float *) malloc(sizeof(float) * n);
@@ -152,9 +153,36 @@ int main(int argc, char *argv[]) {
     } else if (mat_mat_ver) {
         printf("Program will create two %d x %d matrices for calculations\n", n, n);
         mat1 = matrixCreationNByN(n);
+        mat_ans_c = matrixCreationNByN(n);
+        mat_ans_sse = matrixCreationNByN(n);
+        if (c_ver || test) {
+            printf("\nRunning simple version\n");
+            driveMatMatCPU(mat0, mat1, mat_ans_c, n);
+        }
+
+        if (sse_ver || test) {
+            out_vec_sse = (float *) malloc(sizeof(float) * n);
+            printf("\nRunning sse version\n");
+            driveMatMat_SSE(mat0, mat1, mat_ans_sse, n);
+        }
+
+        if (test) {
+            printf("\nVerifying matrix matrix multiplication\n");
+            printf("Verifying sse and simple...\n");
+            float error_sse_simple = 0;
+            for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < n; ++j) {
+                    error_sse_simple += fabs(mat_ans_c[i][j] - mat_ans_sse[i][j]);
+                }
+            }
+
+            if (error_sse_simple > 0.01) {
+                printf("\tSSE version verified against simple version - NOT OK\n");
+            } else {
+                printf("\tSSE version verified against simple version - OK\n");
+            }
+        }
         freeNByNMat((float **) mat1, n);
-
-
         mat1 = NULL;
     }
 
