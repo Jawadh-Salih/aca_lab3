@@ -9,7 +9,7 @@ set(SOURCE_FILES
         src/matvec.c
         src/matvec_AUTO.c
         src/util.c
-        include/util.h src/sse_methods.c include/sse_methods.h include/matvec_drivers.h src/matvec_drivers.c include/matvec.h)
+        include/util.h src/sse_methods.c include/sse_methods.h include/matvec_drivers.h src/matvec_drivers.c include/matvec.h include/matmat_drivers.h src/matmat_drivers.c include/matmat.h)
 
 #set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse3 -ftree-vectorizer-verbose=2 -ftree-vectorize")
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -ftree-vectorizer-verbose=2 -ftree-vectorize")
