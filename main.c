@@ -7,92 +7,25 @@
 #include<pmmintrin.h>
 #include <getopt.h>
 #include <time.h>
+#include <math.h>
+#include <float.h>
 #include "util.h"
 #include "matvec_drivers.h"
 
-//#include <assert.h>
-//#include<smmintrin.h>
-//#include<tmmintrin.h>
-//#include<xmmintrin.h>
-//#include <xmmintrin.h>	// Need this for SSE compiler intrinsics
-//#include <math.h>		// Needed for sqrt in CPU-only version
-
-static void matvec_unrolled(int n, float vec_c[n], const float mat_a[n][n], const float vec_b[n]) {
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j += 4) {
-            vec_c[i] += mat_a[i][j] * vec_b[j]
-                        + mat_a[i][j + 1] * vec_b[j + 1]
-                        + mat_a[i][j + 2] * vec_b[j + 2]
-                        + mat_a[i][j + 3] * vec_b[j + 3];
-        }
-    }
-}
-
-static void matvec_unrolled_sse(int n, float *vec_c, const float mat_a[n][n], const float vec_b[n]) {
-
-    // NOTE : Matrix and Vector both must have dimensions which are multiples of 4
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < n; j += 4) {
-            // load the vector
-
-            __m128 temp = _mm_loadu_ps(&vec_c[i]);
-
-            __m128 x0 = _mm_loadu_ps(&vec_b[j]);
-            printf("Loading vector ok\n");
-
-            // load the matirx mat_a current section to a v0-v1 four vectors
-            __m128 v0 = _mm_loadu_ps(&mat_a[i][j]);
-            printf("Loading matrix ok\n");
-
-            // multiplication
-            __m128 m0 = _mm_mul_ps(x0, v0);
-            printf("Multiplication ok\n");
-
-            // reduction
-            // TODO : We are wasting 3 locations of the rslts vector we can process 4 outputs for
-            // output vector and for that we need 16x16 block from input matrix and 16 length from input vector
-            // any idea
-            __m128 zero_v = _mm_setzero_ps();
-            __m128 sm0 = _mm_hadd_ps(m0,zero_v);
-            __m128 rslt = _mm_hadd_ps(sm0,zero_v);
-            rslt = _mm_add_ps(rslt,temp);
-            printf("Horizontal addition ok\n");
-
-            _mm_storeu_ps(&vec_c[i], rslt);
-        }
-    }
-}
-
-static void test(int n, float *vec_c, const float ** mat_a, const float * vec_b) {
-
-    __m128 x0 = _mm_loadu_ps(&vec_b[0]);
-    printf("Loading vector ok\n");
-//    __m128 two_v = _mm_set1_ps(2);
-    printf("Storing vector ok\n");
-    _mm_storeu_ps(&vec_c[0], x0);
-
-
-}
 
 int main(int argc, char *argv[]) {
     printf("Starting calculation...\n");
-    int n = 8;
-    float mat[8][8] = {{1, 2, 3, 4,1, 2, 3, 4},
-                       {0, 0, 0, 0,1, 2, 3, 4},
-                       {0, 0, 0, 0,1, 2, 3, 4},
-                       {0, 0, 0, 0,1, 2, 3, 4},
-                       {1, 2, 3, 4,1, 2, 3, 4},
-                       {0, 0, 0, 0,1, 2, 3, 4},
-                       {0, 0, 0, 0,1, 2, 3, 4},
-                       {0, 0, 0, 0,1, 2, 3, 4}};
-    float vec[8] = {1, 1, 1, 1,1, 1, 1, 1};
-    float vec_seq[8]={0};
-    float vec_sse[8]={0};
+    int c, n = 4;
+    const float **mat0 = NULL, **mat1 = NULL, *in_vec = NULL;
+    float *out_vec_simple = NULL;
+    float *out_vec_sse = NULL;
+    float *out_vec_auto = NULL;
+    time_t t;
+    srand((unsigned) time(&t));
 
+    short mat_vec_ver = 0, mat_mat_ver = 0, c_ver = 0, sse_ver = 0, a_vec_ver = 0, test = 0;
 
-    short mat_vec_ver = 0, mat_mat_ver = 0, c_ver = 0, sse_ver = 0, a_vec_ver = 0;
-
-    while ((c = getopt(argc, argv, "n:hvmcsa")) != -1) {
+    while ((c = getopt(argc, argv, "n:hvmcsat")) != -1) {
         switch (c) {
             case 'n':
                 n = atoi(optarg);
@@ -112,17 +45,26 @@ int main(int argc, char *argv[]) {
             case 'm':
                 mat_mat_ver = 1;
                 break;
+            case 't':
+                test = 1;
+                break;
             case 'h':
                 printf("-m\t\t\t-\trun the matrix X matrix version.\n");
                 printf("-v\t\t\t-\trun the matrix X vector version.\n");
-                printf("-c\t\t\t-\trun the cpu version.\n");
+                printf("-c\t\t\t-\trun the simple version.\n");
                 printf("-s\t\t\t-\trun the sse version.\n");
                 printf("-a\t\t\t-\trun the auto vectorized version.\n");
+                printf("-t\t\t\t-\trun all versions and verify against simple version.\n");
                 printf("-h\t\t\t-\tShow this menu\n");
                 printf("example for the assignment.\n");
-                printf("eg : ./aca_lab3 -n 100 -v\n");
-                printf("eg : ./aca_lab3 -n 100 -m\n");
-                printf("eg : ./aca_lab3 -h\n");
+                printf("eg : ./aca_lab3 -n 100 -vc\n");
+                printf("\t Run with matrix size 100x100(n), vector size 100(n), simple version(c) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 10 -vs\n");
+                printf("\t Run with matrix size 10x10(n), vector size 10(n), sse version(s) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 100 -vt\n");
+                printf("\t Run with matrix size 100x100(n), vector size 100(n), verification phase(t) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 100 -mc\n");
+                printf("\t Run with two matrices of size 100x100(n) simple version(c) - matrix-matrix (m)\n");
                 break;
             case '?':
                 if (optopt == 'n') {
@@ -142,37 +84,81 @@ int main(int argc, char *argv[]) {
         printf("Program will create %d x %d matrix and a %dx1 vector for calculations\n", n, n, n);
         // vector creation
         in_vec = vectorCreation(n);
-        printf("Input Matrix\n");
-        printNByNMat(mat0, n);
-        printf("Input Vector\n");
-        printVector(in_vec, n);
+        //TODO : Remove from release
+//        printf("Input Matrix\n");
+//        printNByNMat(mat0, n);
+//        printf("Input Vector\n");
+//        printVector(in_vec, n);
         // run 10 times get the average time
-        out_vec = (float *) malloc(sizeof(float)*n);
-        if(c_ver) {
-            printf("Running simple version\n");
-            driveMatVecCPU(mat0, in_vec, out_vec, n);
+        if (c_ver || test) {
+            out_vec_simple = (float *) malloc(sizeof(float) * n);
+            printf("\nRunning simple version\n");
+            driveMatVecCPU(mat0, in_vec, out_vec_simple, n);
+            //TODO : Remove from release
             printf("Output Vector\n");
-            printVector(out_vec, n);
+            printVector(out_vec_simple, n);
         }
-        if(sse_ver){
-            printf("Running sse version\n");
-            printf("Running simple version\n");
-            driveMatVecSSE(mat0, in_vec, out_vec, n);
+        if (sse_ver || test) {
+            out_vec_sse = (float *) malloc(sizeof(float) * n);
+            printf("\nRunning sse version\n");
+            driveMatVecSSE(mat0, in_vec, out_vec_sse, n);
+            //TODO : Remove from release
             printf("Output Vector\n");
-            printVector(out_vec, n);
+            printVector(out_vec_sse, n);
         }
-        if(a_vec_ver) {
-            printf("Running auto vectorized version\n");
+        if (a_vec_ver || test) {
+            out_vec_auto = (float *) malloc(sizeof(float) * n);
+            printf("\nRunning auto vectorized version\n");
 
         }
-        free((float *)in_vec);
-        free((float *)out_vec);
+        free((float *) in_vec);
+
+        if (test) {
+            printf("\nVerifying matrix vector multiplication\n");
+            printf("Verifying sse and simple...\n");
+            float error_sse_simple = 0;
+            for (int i = 0; i < n; ++i) {
+                error_sse_simple += fabs(out_vec_simple[i] - out_vec_sse[i]);
+            }
+
+            if (error_sse_simple > 0.01) {
+                printf("\tSSE version verified against simple version - NOT OK\n");
+            } else {
+                printf("\tSSE version verified against simple version - OK\n");
+            }
+            printf("Verifying auto and simple...\n");
+            float error_auto_simple = 0;
+            for (int i = 0; i < n; ++i) {
+                error_auto_simple += fabs(out_vec_auto[i] - out_vec_sse[i]);
+            }
+            if (error_auto_simple > FLT_EPSILON) {
+                printf("\tAuto vectorized version verified against simple version - NOT OK\n");
+            } else {
+                printf("\tAuto vectorized version verified against simple version - OK\n");
+            }
+        }
+        if (out_vec_simple != NULL) {
+            free((float *) out_vec_simple);
+            out_vec_simple = NULL;
+        }
+        if (out_vec_sse != NULL) {
+            free((float *) out_vec_sse);
+            out_vec_sse = NULL;
+        }
+        if (out_vec_auto != NULL) {
+            free((float *) out_vec_auto);
+            out_vec_auto = NULL;
+        }
     } else if (mat_mat_ver) {
         printf("Program will create two %d x %d matrices for calculations\n", n, n);
         mat1 = matrixCreationNByN(n);
-        freeNByNMat((float **)mat1,n);
+        freeNByNMat((float **) mat1, n);
+
+
+        mat1 = NULL;
     }
 
-    freeNByNMat((float **)mat0, n);
+    freeNByNMat((float **) mat0, n);
+    mat0 = NULL;
     return 0;
 }
