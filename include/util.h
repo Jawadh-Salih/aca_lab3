@@ -11,7 +11,8 @@ float **matrixCreationNByN_Empty(int r, int c);
 const float **matrixCreationNByN(int r, int c);
 
 void freeNMat(float **mat, int n);
-void printNByNMat(const float ** mat, int n);
+
+void printNByCMat(const float **mat, int n, int c);
 const float *vectorCreation(int n);
 void printVector(const float *vec, int n);
 float elapsed_time_microsec(struct timespec *begin, struct timespec *end,

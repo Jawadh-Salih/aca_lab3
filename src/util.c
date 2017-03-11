@@ -81,7 +81,7 @@ const float **matrixCreationNByN(int r, int c) {
     }
     for (int j = 0; j < r; ++j) {
         for (int i = 0; i < c; ++i) {
-            mat[j][i] = rand() % 10 + 1;
+            mat[j][i] = (rand() * 5) % 5 + 1;
         }
     }
     return (const float **)mat;
@@ -107,10 +107,10 @@ void freeNMat(float **mat, int n) {
     free(mat);
 }
 
-void printNByNMat(const float **mat, int n) {
+void printNByCMat(const float **mat, int n, int c) {
     if (mat != NULL) {
         for (int j = 0; j < n; ++j) {
-            for (int i = 0; i < n; ++i) {
+            for (int i = 0; i < c; ++i) {
                 printf("%3.3f  ", mat[j][i]);
             }
             printf("\n");

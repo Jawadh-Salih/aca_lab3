@@ -22,14 +22,14 @@ void driveMatMatCPU(const float **mat_a, const float **mat_b, float **mat_c, int
     float mean, sd;
     float times[10] = {};
     int req_n;
-    for (int i = 0; i < 10; ++i) { GET_TIME(t0);
+    for (int i = 0; i < 10; ++i) {
+        clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
         matmat_listing7(mat_c, n, n, mat_a, 200, mat_b);
 //        matmat_listing7(float **mat_c, int a_h, int com_n,
 //        const float **mat_a, int b_w, const float **mat_b)
         GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
-        clearNbyNMatrix(n, 200, mat_c);
     }
     mean = Average(times, 10);
     sd = standardDeviation(times, 10);
@@ -39,11 +39,11 @@ void driveMatMatCPU(const float **mat_a, const float **mat_b, float **mat_c, int
     if (req_n > 10) {
         float *times_2 = (float *) malloc(sizeof(float) * req_n);
         printf("Automatically running with required sample size");
-        for (int i = 0; i < req_n; ++i) { GET_TIME(t0);
+        for (int i = 0; i < req_n; ++i) {
+            clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
             matmat_listing7(mat_c, n, n, mat_a, 200, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
-            clearNbyNMatrix(n, 200, mat_c);
         }
         mean = Average(times_2, req_n);
         sd = standardDeviation(times_2, req_n);
@@ -58,12 +58,12 @@ void driveMatMat_SSE(const float **mat_a, const float **mat_b, float **mat_c, in
     unsigned long sec, nsec;
     float mean, sd;
     float times[10] = {};
-    int req_n = 10;
-    for (int i = 0; i < 10; ++i) { GET_TIME(t0);
+    int req_n;
+    for (int i = 0; i < 10; ++i) {
+        clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
         matmat_listing7_sse(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
-        clearNbyNMatrix(n, 200, mat_c);
     }
     mean = Average(times, 10);
     sd = standardDeviation(times, 10);
@@ -73,11 +73,11 @@ void driveMatMat_SSE(const float **mat_a, const float **mat_b, float **mat_c, in
     if (req_n > 10) {
         float *times_2 = (float *) malloc(sizeof(float) * req_n);
         printf("Automatically running with required sample size");
-        for (int i = 0; i < req_n; ++i) { GET_TIME(t0);
+        for (int i = 0; i < req_n; ++i) {
+            clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
             matmat_listing7_sse(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
-            clearNbyNMatrix(n, 200, mat_c);
         }
         mean = Average(times_2, req_n);
         sd = standardDeviation(times_2, req_n);
@@ -93,11 +93,11 @@ void driveMatMatAuto(const float **mat_a, const float **mat_b, float **mat_c, in
     float mean, sd;
     float times[10] = {};
     int req_n;
-    for (int i = 0; i < 10; ++i) { GET_TIME(t0);
+    for (int i = 0; i < 10; ++i) {
+        clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
         matmat_auto(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
-        clearNbyNMatrix(n, 200, mat_c);
     }
     mean = Average(times, 10);
     sd = standardDeviation(times, 10);
@@ -107,11 +107,12 @@ void driveMatMatAuto(const float **mat_a, const float **mat_b, float **mat_c, in
     if (req_n > 10) {
         float *times_2 = (float *) malloc(sizeof(float) * req_n);
         printf("Automatically running with required sample size");
-        for (int i = 0; i < req_n; ++i) { GET_TIME(t0);
+        for (int i = 0; i < req_n; ++i) {
+            clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
             matmat_auto(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
-            clearNbyNMatrix(n, 200, mat_c);
+
         }
         mean = Average(times_2, req_n);
         sd = standardDeviation(times_2, req_n);

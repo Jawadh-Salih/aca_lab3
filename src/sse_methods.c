@@ -116,13 +116,12 @@ void matvec_unrolled_16sse(int n, float *vec_c, const float **mat_a, const float
 
 void matmat_listing7_sse(int n, int c, float **mat_c, const float **mat_a, const float **mat_b) {
 
-    int transposed[c][n];
+    int transposed[c][n] __attribute__((aligned(32)));
 
     //TODO : JAWAD Check this works , HOW ?
     for (int l = 0; l < c; ++l) {
         for (int i = 0; i < n; ++i) {
-//            transposed[l][i] = mat_b[i][l];
-//            __m128 v0 = _mm_loadu_ps(&mat_a[i][k]);
+            transposed[l][i] = mat_b[i][l];
         }
     }
 

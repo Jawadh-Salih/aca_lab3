@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
         in_vec = vectorCreation(n);
         //TODO : Remove from release
 //        printf("Input Matrix\n");
-//        printNByNMat(mat0, n);
+//        printNByCMat(mat0, n);
 //        printf("Input Vector\n");
 //        printVector(in_vec, n);
         // run 10 times get the average time
@@ -124,10 +124,10 @@ int main(int argc, char *argv[]) {
             printf("Verifying sse (listing 6) and listing 5 C Program.\n");
             float error_sse_simple = 0;
             for (int i = 0; i < n; ++i) {
-                error_sse_simple += fabs(out_vec_simple[i] - out_vec_sse[i]);
+                error_sse_simple += fabsf(out_vec_simple[i] - out_vec_sse[i]);
             }
 
-            if (error_sse_simple > FLT_EPSILON) {
+            if (error_sse_simple > FLT_EPSILON || isnanf(error_sse_simple)) {
                 printf("\tSSE (listing 6) version verified against listing 5 C Program - NOT OK\n");
             } else {
                 printf("\tSSE (listing 6) version verified against listing 5 C Program - OK\n");
@@ -135,10 +135,10 @@ int main(int argc, char *argv[]) {
             printf("Verifying Listing 6 C and listing 5 C Program.\n");
             float error_list6_simple = 0;
             for (int i = 0; i < n; ++i) {
-                error_list6_simple += fabs(out_vec_simple_list6[i] - out_vec_sse[i]);
+                error_list6_simple += fabsf(out_vec_simple_list6[i] - out_vec_sse[i]);
             }
 
-            if (error_list6_simple > FLT_EPSILON) {
+            if (error_list6_simple > FLT_EPSILON || isnanf(error_list6_simple)) {
                 printf("\tListing 6 C Program verified against listing 5 C Program - NOT OK\n");
             } else {
                 printf("\tListing 6 C Program verified against listing 5 C Program - OK\n");
@@ -147,9 +147,9 @@ int main(int argc, char *argv[]) {
             printf("Verifying auto and simple...\n");
             float error_auto_simple = 0;
             for (int i = 0; i < n; ++i) {
-                error_auto_simple += fabs(out_vec_auto[i] - out_vec_sse[i]);
+                error_auto_simple += fabsf(out_vec_auto[i] - out_vec_sse[i]);
             }
-            if (error_auto_simple > FLT_EPSILON) {
+            if (error_auto_simple > FLT_EPSILON || isnanf(error_auto_simple)) {
                 printf("\tAuto vectorized version verified against simple version - NOT OK\n");
             } else {
                 printf("\tAuto vectorized version verified against simple version - OK\n");
@@ -170,7 +170,8 @@ int main(int argc, char *argv[]) {
     } else if (mat_mat_ver) {
         printf("Program will create random one %d x %d matrix and one %d x 200 matrix for calculations\n", n, n, n);
         mat1 = matrixCreationNByN(n, 200);
-
+//        printNByCMat(mat1, n, 200);
+//        printNByCMat(mat0, n, n);
         if (c_ver || test) {
             sleep(1);
             mat_ans_c = matrixCreationNByN_Empty(n, 200);
@@ -199,10 +200,13 @@ int main(int argc, char *argv[]) {
             float error_sse_simple = 0;
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < 200; ++j) {
-                    error_sse_simple += fabs(mat_ans_c[i][j] - mat_ans_sse[i][j]);
+                    error_sse_simple += fabsf(mat_ans_c[i][j] - mat_ans_sse[i][j]);
+//                    printf("mat_ans_c[i][j] %f\n",mat_ans_c[i][j]);
+//                    printf("mat_ans_sse[i][j] %f\n",mat_ans_sse[i][j]);
                 }
             }
-            if (error_sse_simple > FLT_EPSILON) {
+//            printf("\tERROR : %f\n", error_sse_simple);
+            if (error_sse_simple > FLT_EPSILON || isnanf(error_sse_simple)) {
                 printf("\tListing 7 SSE mxm version verified against listing 7 C Program - NOT OK\n");
             } else {
                 printf("\tListing 7 SSE mxm version verified against listing 7 C Program - OK\n");
@@ -212,11 +216,11 @@ int main(int argc, char *argv[]) {
             float error_auto_simple = 0;
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < 200; ++j) {
-                    error_auto_simple += fabs(mat_ans_c[i][j] - mat_ans_auto[i][j]);
+                    error_auto_simple += fabsf(mat_ans_c[i][j] - mat_ans_auto[i][j]);
                 }
             }
 
-            if (error_auto_simple > FLT_EPSILON) {
+            if (error_auto_simple > FLT_EPSILON || isnanf(error_auto_simple)) {
                 printf("\tListing 7 auto vectorized version verified against listing 7 C Program - NOT OK\n");
             } else {
                 printf("\tListing 7 auto vectorized version verified against listing 7 C Program - OK\n");
