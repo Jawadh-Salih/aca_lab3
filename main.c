@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     const float **mat0 = NULL, **mat1 = NULL, *in_vec = NULL;
     float **mat_ans_c = NULL, **mat_ans_sse = NULL, **mat_ans_auto = NULL;
     float *out_vec_simple = NULL, *out_vec_sse = NULL, *out_vec_auto = NULL, *out_vec_simple_list6 = NULL;
-
+    int cols = 4;
     time_t t;
     srand((unsigned) time(&t));
 
@@ -169,28 +169,28 @@ int main(int argc, char *argv[]) {
         }
     } else if (mat_mat_ver) {
         printf("Program will create random one %d x %d matrix and one %d x 200 matrix for calculations\n", n, n, n);
-        mat1 = matrixCreationNByN(n, 200);
+        mat1 = matrixCreationNByN(n, cols);
 //        printNByCMat(mat1, n, 200);
 //        printNByCMat(mat0, n, n);
         if (c_ver || test) {
             sleep(1);
-            mat_ans_c = matrixCreationNByN_Empty(n, 200);
+            mat_ans_c = matrixCreationNByN_Empty(n, cols);
             printf("\nRunning mxm listing 7 C Program\n");
-            driveMatMatCPU(mat0, mat1, mat_ans_c, n);
+            driveMatMatCPU(mat0, mat1, mat_ans_c, n, cols);
         }
 
         if (sse_ver || test) {
             sleep(1);
-            mat_ans_sse = matrixCreationNByN_Empty(n, 200);
+            mat_ans_sse = matrixCreationNByN_Empty(n, cols);
             printf("\nRunning mxm listing 7 SSE version\n");
-            driveMatMat_SSE(mat0, mat1, mat_ans_sse, n);
+            driveMatMat_SSE(mat0, mat1, mat_ans_sse, n, cols);
         }
 
         if (a_vec_ver || test) {
             sleep(1);
-            mat_ans_auto = matrixCreationNByN_Empty(n, 200);
+            mat_ans_auto = matrixCreationNByN_Empty(n, cols);
             printf("\nRunning mxm listing 7 auto vectorized version\n");
-            driveMatMatAuto(mat0, mat1, mat_ans_auto, n);
+            driveMatMatAuto(mat0, mat1, mat_ans_auto, n, cols);
 
         }
 
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
             printf("Verifying listing 7 SSE and listing 7 C Program\n");
             float error_sse_simple = 0;
             for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < 200; ++j) {
+                for (int j = 0; j < cols; ++j) {
                     error_sse_simple += fabsf(mat_ans_c[i][j] - mat_ans_sse[i][j]);
 //                    printf("mat_ans_c[i][j] %f\n",mat_ans_c[i][j]);
 //                    printf("mat_ans_sse[i][j] %f\n",mat_ans_sse[i][j]);
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
             printf("Verifying listing 7 auto vectorized version and listing 7 C Program.\n");
             float error_auto_simple = 0;
             for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < 200; ++j) {
+                for (int j = 0; j < cols; ++j) {
                     error_auto_simple += fabsf(mat_ans_c[i][j] - mat_ans_auto[i][j]);
                 }
             }

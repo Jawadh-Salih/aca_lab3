@@ -16,15 +16,15 @@
 {perror("clock_gettime(): "); exit(EXIT_FAILURE);}
 
 // Matrix Matrix Drivers
-void driveMatMatCPU(const float **mat_a, const float **mat_b, float **mat_c, int n) {
+void driveMatMatCPU(const float **mat_a, const float **mat_b, float **mat_c, int n, int cols) {
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
     float times[10] = {};
     int req_n;
     for (int i = 0; i < 10; ++i) {
-        clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
-        matmat_listing7(mat_c, n, n, mat_a, 200, mat_b);
+        clearNbyNMatrix(n, cols, mat_c);GET_TIME(t0);
+        matmat_listing7(mat_c, n, n, mat_a, cols, mat_b);
 //        matmat_listing7(float **mat_c, int a_h, int com_n,
 //        const float **mat_a, int b_w, const float **mat_b)
         GET_TIME(t1);
@@ -40,8 +40,8 @@ void driveMatMatCPU(const float **mat_a, const float **mat_b, float **mat_c, int
         float *times_2 = (float *) malloc(sizeof(float) * req_n);
         printf("Automatically running with required sample size");
         for (int i = 0; i < req_n; ++i) {
-            clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
-            matmat_listing7(mat_c, n, n, mat_a, 200, mat_b);GET_TIME(t1);
+            clearNbyNMatrix(n, cols, mat_c);GET_TIME(t0);
+            matmat_listing7(mat_c, n, n, mat_a, cols, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
         }
@@ -53,15 +53,15 @@ void driveMatMatCPU(const float **mat_a, const float **mat_b, float **mat_c, int
     }
 }
 
-void driveMatMat_SSE(const float **mat_a, const float **mat_b, float **mat_c, int n) {
+void driveMatMat_SSE(const float **mat_a, const float **mat_b, float **mat_c, int n, int cols) {
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
     float times[10] = {};
     int req_n;
     for (int i = 0; i < 10; ++i) {
-        clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
-        matmat_listing7_sse(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
+        clearNbyNMatrix(n, cols, mat_c);GET_TIME(t0);
+        matmat_listing7_sse(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
     }
@@ -74,8 +74,8 @@ void driveMatMat_SSE(const float **mat_a, const float **mat_b, float **mat_c, in
         float *times_2 = (float *) malloc(sizeof(float) * req_n);
         printf("Automatically running with required sample size");
         for (int i = 0; i < req_n; ++i) {
-            clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
-            matmat_listing7_sse(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
+            clearNbyNMatrix(n, cols, mat_c);GET_TIME(t0);
+            matmat_listing7_sse(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
         }
@@ -87,15 +87,15 @@ void driveMatMat_SSE(const float **mat_a, const float **mat_b, float **mat_c, in
     }
 }
 
-void driveMatMatAuto(const float **mat_a, const float **mat_b, float **mat_c, int n) {
+void driveMatMatAuto(const float **mat_a, const float **mat_b, float **mat_c, int n, int cols) {
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
     float times[10] = {};
     int req_n;
     for (int i = 0; i < 10; ++i) {
-        clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
-        matmat_auto(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
+        clearNbyNMatrix(n, cols, mat_c);GET_TIME(t0);
+        matmat_auto(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
     }
@@ -108,8 +108,8 @@ void driveMatMatAuto(const float **mat_a, const float **mat_b, float **mat_c, in
         float *times_2 = (float *) malloc(sizeof(float) * req_n);
         printf("Automatically running with required sample size");
         for (int i = 0; i < req_n; ++i) {
-            clearNbyNMatrix(n, 200, mat_c);GET_TIME(t0);
-            matmat_auto(n, 200, mat_c, mat_a, mat_b);GET_TIME(t1);
+            clearNbyNMatrix(n, cols, mat_c);GET_TIME(t0);
+            matmat_auto(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
 
