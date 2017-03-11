@@ -4,6 +4,7 @@
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include "sse_methods.h"
+#include <stdio.h>
 
 void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const float *vec_b) {
     __m128 zero_v = _mm_setzero_ps();
@@ -116,12 +117,16 @@ void matvec_unrolled_16sse(int n, float *vec_c, const float **mat_a, const float
 
 void matmat_listing7_sse(int n, int c, float **mat_c, const float **mat_a, const float **mat_b) {
 
-    int transposed[c][n] __attribute__((aligned(32)));
+//    int transposed[c][n] __attribute__((aligned(32)));
+    int transposed[c][n];
 
     //TODO : JAWAD Check this works , HOW ?
     for (int l = 0; l < c; ++l) {
+//        printf("Transposing row : %d\n", l);
         for (int i = 0; i < n; ++i) {
             transposed[l][i] = mat_b[i][l];
+//            printf("mat_b[i][l] : %f\n", mat_b[i][l]);
+//            transposed[l][i] = 1;
         }
     }
 
