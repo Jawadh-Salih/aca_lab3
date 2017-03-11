@@ -2,23 +2,10 @@
 // Created by krv on 2/28/17.
 //
 #include <xmmintrin.h>
-#include <stdio.h>
 #include <pmmintrin.h>
-#include <util.h>
 #include "sse_methods.h"
 
-void test(int n, float *vec_c, const float **mat_a, const float *vec_b) {
-
-    __m128 x0 = _mm_loadu_ps(&vec_b[0]);
-    printf("Loading vector ok\n");
-//    __m128 two_v = _mm_set1_ps(2);
-    printf("Storing vector ok\n");
-    _mm_storeu_ps(&vec_c[0], x0);
-
-
-}
-
-void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const float vec_b[n]) {
+void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const float *vec_b) {
     __m128 zero_v = _mm_setzero_ps();
     // NOTE : Matrix and Vector both must have dimensions which are multiples of 4
     for (int i = 0; i < n; i += 1) {
@@ -48,7 +35,7 @@ void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const f
     }
 }
 
-void matvec_unrolled_16sse(int n, float *vec_c, const float **mat_a, const float vec_b[n]) {
+void matvec_unrolled_16sse(int n, float *vec_c, const float **mat_a, const float *vec_b) {
 
     // NOTE : Matrix and Vector both must have dimensions which are multiples of 4
     int unroll16Size = n / 16;  // expect an integer division
@@ -127,24 +114,34 @@ void matvec_unrolled_16sse(int n, float *vec_c, const float **mat_a, const float
 //    printVector(vec_c, n);
 }
 
-void matmat_listing7_sse(int n, float **mat_c,
-                         const float **mat_a, const float **mat_b) {
+void matmat_listing7_sse(int n, int c, float **mat_c, const float **mat_a, const float **mat_b) {
 
+    int transposed[c][n];
+
+    for (int l = 0; l < c; ++l) {
+        for (int i = 0; i < n; ++i) {
+//            transposed[l][i] = mat_b[i][l];
+//            __m128 v0 = _mm_loadu_ps(&mat_a[i][k]);
+        }
+    }
+
+    __m128 zero_v = _mm_setzero_ps();
     for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < n; j += 1) {
-            // load the vector
+        for (int j = 0; j < c; j += 1) {
+            __m128 temp = _mm_loadu_ps(&mat_c[i][j]);
             for (int k = 0; k < n; k = k + 4) {
-
-//                __m128 temp = _mm_loadu_ps(&mat_c[i][j]);
-                __m128 x0 = _mm_loadu_ps(&mat_b[k][j]);
                 __m128 v0 = _mm_loadu_ps(&mat_a[i][k]);
+                __m128 x0 = _mm_loadu_ps(&transposed[j][k]);
+
                 __m128 m0 = _mm_mul_ps(x0, v0);
-                __m128 zero_v = _mm_setzero_ps();
+
                 __m128 sm0 = _mm_hadd_ps(m0, zero_v);
                 __m128 rslt = _mm_hadd_ps(sm0, zero_v);
-                rslt = _mm_add_ps(rslt, rslt);
-                _mm_storeu_ps(&mat_c[i][j], rslt);
+
+                temp = _mm_add_ps(rslt, temp);
+
             }
+            _mm_storeu_ps(&mat_c[i][j], temp);
         }
     }
 }

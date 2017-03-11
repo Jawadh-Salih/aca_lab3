@@ -2,12 +2,10 @@
 // Created by jawadhsr on 2/27/17.
 //
 
-#include "util.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-
+#include "util.h"
 
 // N = (100zs/rx)^2, r - accuracy (5%), s - standard deviation, x - Average, z = 1.960 (95%) - TAKE THE CEIL
 /// This function gives the required number of samples to take to achieve
@@ -76,20 +74,33 @@ float elapsed_time_msec(struct timespec *begin, struct timespec *end,
     return (float) (*sec) * 1000 + ((float) (*nsec)) / 1000000.0;
 }
 
-const float **matrixCreationNByN(int n) {
-    float **mat = (float **) malloc(sizeof(float *) * n);
-    for (int i = 0; i < n; ++i) {
-        mat[i] = (float *) malloc(sizeof(float) * n);
+const float **matrixCreationNByN(int r, int c) {
+    float **mat = (float **) malloc(sizeof(float *) * r);
+    for (int i = 0; i < r; ++i) {
+        mat[i] = (float *) malloc(sizeof(float) * c);
     }
-    for (int j = 0; j < n; ++j) {
-        for (int i = 0; i < n; ++i) {
-            mat[j][i] = rand() % 10;
+    for (int j = 0; j < r; ++j) {
+        for (int i = 0; i < c; ++i) {
+            mat[j][i] = rand() % 10 + 1;
         }
     }
     return (const float **)mat;
 }
 
-void freeNByNMat(float **mat, int n) {
+float **matrixCreationNByN_Empty(int r, int c) {
+    float **mat = (float **) malloc(sizeof(float *) * r);
+    for (int i = 0; i < r; ++i) {
+        mat[i] = (float *) malloc(sizeof(float) * c);
+    }
+    for (int j = 0; j < r; ++j) {
+        for (int i = 0; i < c; ++i) {
+            mat[j][i] = 0;
+        }
+    }
+    return mat;
+}
+
+void freeNMat(float **mat, int n) {
     for (int i = 0; i < n; ++i) {
         free(mat[i]);
     }
@@ -120,4 +131,18 @@ void printVector(const float *vec, int n) {
         printf("%3.3f  ", vec[i]);
     }
     printf("\n");
+}
+
+void clearNbyNMatrix(int n, int c, float **mat) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < c; ++j) {
+            mat[i][j] = 0;
+        }
+    }
+}
+
+void cleanVector(float *vec, int n) {
+    for (int i = 0; i < n; ++i) {
+        vec[i] = 0;
+    }
 }

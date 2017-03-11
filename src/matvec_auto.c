@@ -1,6 +1,7 @@
 //
 // Created by jawadhsr on 2/27/17.
 //
+#include "matvec_auto.h"
 
 void matvec_unrolled_auto(int n, float *vec_c, const float **mat_a, const float *vec_b) {
     for (int i = 0; i < n; i++) {
