@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
             printf("Verifying Listing 6 C and listing 5 C Program.\n");
             float error_list6_simple = 0;
             for (int i = 0; i < n; ++i) {
-                error_list6_simple += fabsf(out_vec_simple_list6[i] - out_vec_sse[i]);
+                error_list6_simple += fabsf(out_vec_simple_list6[i] - out_vec_simple[i]);
             }
 
             if (error_list6_simple > FLT_EPSILON || isnanf(error_list6_simple)) {
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
             printf("Verifying auto and simple...\n");
             float error_auto_simple = 0;
             for (int i = 0; i < n; ++i) {
-                error_auto_simple += fabsf(out_vec_auto[i] - out_vec_sse[i]);
+                error_auto_simple += fabsf(out_vec_auto[i] - out_vec_simple[i]);
             }
             if (error_auto_simple > FLT_EPSILON || isnanf(error_auto_simple)) {
                 printf("\tAuto vectorized version verified against simple version - NOT OK\n");

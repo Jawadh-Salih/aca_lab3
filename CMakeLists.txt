@@ -16,8 +16,8 @@ set(SOURCE_FILES main.c
 
 #set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse3 -ftree-vectorizer-verbose=2 -ftree-vectorize")
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -ftree-vectorizer-verbose=2 -ftree-vectorize")
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse3 -O0 -Wall")
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -O0 -Wall")
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse4.1 -O0 -Wall")
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse4.1 -O0 -Wall")
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -march=native -O0 -Wall")
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -mcmodel=large -O0 -Wall")
 
