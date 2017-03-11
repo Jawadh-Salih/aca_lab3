@@ -16,12 +16,12 @@ set(SOURCE_FILES main.c
 
 #set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse3 -ftree-vectorizer-verbose=2 -ftree-vectorize")
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -ftree-vectorizer-verbose=2 -ftree-vectorize")
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse3 -march=native -O3 -Wall")
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -march=native -O3 -Wall")
-#set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -mcmodel=large")
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-msse3 -O0 -Wall")
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -O0 -Wall")
+#set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -march=native -O0 -Wall")
+#set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-msse3 -mcmodel=large -O0 -Wall")
 
-#set_source_files_properties(src/matvec_auto.c PROPERTIES COMPILE_FLAGS -ftree-vectorize)
-#set_source_files_properties(include/matvec_auto.h PROPERTIES COMPILE_FLAGS -ftree-vectorize)
-#set_source_files_properties(src/matmat_auto.c PROPERTIES COMPILE_FLAGS ftree-vectorize)
+set_source_files_properties(src/matvec_auto.c PROPERTIES COMPILE_FLAGS "-ftree-vectorizer-verbose=4 -ftree-vectorize")
+set_source_files_properties(src/matmat_auto.c PROPERTIES COMPILE_FLAGS "-ftree-vectorizer-verbose=4 -ftree-vectorize")
 add_executable(aca_lab3 ${SOURCE_FILES})
 target_link_libraries(aca_lab3 m)

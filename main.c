@@ -8,6 +8,7 @@
 #include <math.h>
 #include <float.h>
 #include <time.h>
+#include <unistd.h>
 #include "main_drivers.h"
 #include "util.h"
 
@@ -93,26 +94,28 @@ int main(int argc, char *argv[]) {
 //        printVector(in_vec, n);
         // run 10 times get the average time
         if (c_ver || test) {
+            sleep(1);
             out_vec_simple = (float *) malloc(sizeof(float) * n);
             printf("\nRunning listing 5 C Program\n");
             driveMatVecCPU_listing5(mat0, in_vec, out_vec_simple, n);
-
         }
         if (listing6 || test) {
+            sleep(1);
             out_vec_simple_list6 = (float *) malloc(sizeof(float) * n);
             printf("\nRunning listing 6 C Program\n");
-            driveMatVecCPU_listing6(mat0, in_vec, out_vec_simple, n);
-
+            driveMatVecCPU_listing6(mat0, in_vec, out_vec_simple_list6, n);
         }
         if (sse_ver || test) {
+            sleep(1);
             out_vec_sse = (float *) malloc(sizeof(float) * n);
             printf("\nRunning sse version\n");
             driveMatVecSSE(mat0, in_vec, out_vec_sse, n);
         }
         if (a_vec_ver || test) {
+            sleep(1);
             out_vec_auto = (float *) malloc(sizeof(float) * n);
             printf("\nRunning auto vectorized version\n");
-            driveMatVecAuto(mat0, in_vec, out_vec_simple, n);
+            driveMatVecAuto(mat0, in_vec, out_vec_auto, n);
         }
         free((float *) in_vec);
 
@@ -169,21 +172,25 @@ int main(int argc, char *argv[]) {
         mat1 = matrixCreationNByN(n, 200);
 
         if (c_ver || test) {
+            sleep(1);
             mat_ans_c = matrixCreationNByN_Empty(n, 200);
             printf("\nRunning mxm listing 7 C Program\n");
             driveMatMatCPU(mat0, mat1, mat_ans_c, n);
         }
 
         if (sse_ver || test) {
+            sleep(1);
             mat_ans_sse = matrixCreationNByN_Empty(n, 200);
             printf("\nRunning mxm listing 7 SSE version\n");
             driveMatMat_SSE(mat0, mat1, mat_ans_sse, n);
         }
 
         if (a_vec_ver || test) {
+            sleep(1);
             mat_ans_auto = matrixCreationNByN_Empty(n, 200);
             printf("\nRunning mxm listing 7 auto vectorized version\n");
             driveMatMatAuto(mat0, mat1, mat_ans_auto, n);
+
         }
 
         if (test) {

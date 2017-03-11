@@ -118,6 +118,7 @@ void matmat_listing7_sse(int n, int c, float **mat_c, const float **mat_a, const
 
     int transposed[c][n];
 
+    //TODO : JAWAD Check this works , HOW ?
     for (int l = 0; l < c; ++l) {
         for (int i = 0; i < n; ++i) {
 //            transposed[l][i] = mat_b[i][l];
