@@ -6,7 +6,6 @@
 #include "sse_methods.h"
 
 void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const float *vec_b) {
-    __m128 zero_v = _mm_setzero_ps();
     // NOTE : Matrix and Vector both must have dimensions which are multiples of 4
     for (int i = 0; i < n; i += 1) {
         for (int j = 0; j < n; j += 4) {
@@ -30,12 +29,9 @@ void matvec_unrolled_16sse(int n, float *vec_c, const float **mat_a, const float
     int unroll16Size = n / 16;  // expect an integer division
     int unrolled_num = unroll16Size * 16;
     int rest = n - unrolled_num;
-    // 0,0,0,0 = zero_v
-    __m128 zero_v = _mm_setzero_ps();
 
     for (int i = 0; i < n; i += 1) {
         int j = 0;
-        __m128 row_result = _mm_loadu_ps(&vec_c[i]);
         for (int k = 0; k < unroll16Size; ++k) {
             for (; j < unrolled_num; j += 16) {
 
