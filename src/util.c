@@ -116,6 +116,7 @@ int getArguments(int argc, char *argv[], int *n, short *mat_vec_ver, short *mat_
                 abort();
         }
     }
+    return 0;
 }
 
 void matrixCreationNByN_1D(int r, int c, float **mat_a) {
@@ -145,20 +146,6 @@ void printVector(const float *vec, int n) {
         printf("%3.3f  ", vec[i]);
     }
     printf("\n");
-}
-
-void clearNbyNMatrix(int n, int c, float **mat) {
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < c; ++j) {
-            mat[i][j] = 0;
-        }
-    }
-}
-
-void cleanVector(float *vec, int n) {
-    for (int i = 0; i < n; ++i) {
-        vec[i] = 0;
-    }
 }
 
 void print_vector_ps(__m128 v) {

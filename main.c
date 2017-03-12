@@ -35,6 +35,7 @@ static float *out_vec_simple __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
 static float *out_vec_sse __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
 static float *out_vec_auto __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
 static float *out_vec_simple_list6 __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+
 short mat_vec_ver = 0, mat_mat_ver = 0, c_ver = 0, sse_ver = 0, a_vec_ver = 0, test = 0, listing6;
 
 int main(int argc, char *argv[]) {
@@ -44,8 +45,6 @@ int main(int argc, char *argv[]) {
     srand((unsigned) time(&t));
     getArguments(argc, argv, &n, &mat_vec_ver, &mat_mat_ver, &c_ver, &sse_ver, &a_vec_ver, &test, &listing6);
 
-    //TODO : Remove
-    // cols = 4;
 #ifdef DEBUG
     n = 8;
     t = 1;

@@ -13,7 +13,7 @@ set(SOURCE_FILES main.c
         src/matvec_auto.c include/matvec_auto.h
         src/matmat_auto.c include/matmat_auto.h)
 
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=gnu99 -msse4.1 -O2 -Wall -m64")
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=gnu99 -msse4.1 -msse3 -O0 -Wall -m64")
 
 set_source_files_properties(src/matvec_auto.c PROPERTIES COMPILE_FLAGS "-ftree-vectorizer-verbose=4 -ftree-vectorize")
 set_source_files_properties(src/matmat_auto.c PROPERTIES COMPILE_FLAGS "-ftree-vectorizer-verbose=4 -ftree-vectorize")
