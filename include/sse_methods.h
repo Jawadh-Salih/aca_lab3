@@ -5,9 +5,14 @@
 #ifndef ACA_LAB3_SSE_METHODS_H
 #define ACA_LAB3_SSE_METHODS_H
 
-void matvec_unrolled_sse_quite(int n, float *vec_c, const float **mat_a, const float *vec_b);
+#if !defined(__SSE3__) && !defined(__SSE4_1__)
+#error This example requires SSE3 and SSE4.1
+#endif
 
-void matvec_unrolled_16sse(int n, float *vec_c, const float **mat_a, const float *vec_b);
+
+void matvec_unrolled_sse_quite(int n, float *vec_c, const float *mat_a, const float *vec_b);
+
+void matvec_unrolled_16sse(int n, float *vec_c, const float *mat_a, const float *vec_b);
 
 void matmat_listing7_sse(int n, int c, float **mat_c, const float **mat_a, const float **mat_b);
 

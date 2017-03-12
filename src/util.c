@@ -5,6 +5,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <xmmintrin.h>
+#include <getopt.h>
 #include "util.h"
 
 // N = (100zs/rx)^2, r - accuracy (5%), s - standard deviation, x - Average, z = 1.960 (95%) - TAKE THE CEIL
@@ -37,21 +40,14 @@ float standardDeviation(float times[], int numSamples) {
     return sqrt(variance);
 }
 
-float elapsed_time_nsec(struct timespec *begin, struct timespec *end,
-                        unsigned long *sec, unsigned long *nsec) {
-    if (end->tv_nsec < begin->tv_nsec) {
-        *nsec = 1000000000 - (begin->tv_nsec - end->tv_nsec);
-        *sec = end->tv_sec - begin->tv_sec - 1;
-    } else {
-        *nsec = end->tv_nsec - begin->tv_nsec;
-        *sec = end->tv_sec - begin->tv_sec;
-    }
-    return (float) (*sec) * 1000000 + ((float) (*nsec));
-}
-
-
 float elapsed_time_microsec(struct timespec *begin, struct timespec *end,
                             unsigned long *sec, unsigned long *nsec) {
+
+    // make sure end time is after the begin
+    assert(end->tv_sec > begin->tv_sec ||
+           (end->tv_sec == begin->tv_sec &&
+            end->tv_nsec >= begin->tv_nsec));
+
     if (end->tv_nsec < begin->tv_nsec) {
         *nsec = 1000000000 - (begin->tv_nsec - end->tv_nsec);
         *sec = end->tv_sec - begin->tv_sec - 1;
@@ -59,72 +55,90 @@ float elapsed_time_microsec(struct timespec *begin, struct timespec *end,
         *nsec = end->tv_nsec - begin->tv_nsec;
         *sec = end->tv_sec - begin->tv_sec;
     }
-    return (float) (*sec) * 1000000 + ((float) (*nsec)) / 1000.0;
+    return (float) (*sec) * 1000000 + ((float) (*nsec)) * 1E-3;
 }
 
-float elapsed_time_msec(struct timespec *begin, struct timespec *end,
-                        unsigned long *sec, unsigned long *nsec) {
-    if (end->tv_nsec < begin->tv_nsec) {
-        *nsec = 1000000000 - (begin->tv_nsec - end->tv_nsec);
-        *sec = end->tv_sec - begin->tv_sec - 1;
-    } else {
-        *nsec = end->tv_nsec - begin->tv_nsec;
-        *sec = end->tv_sec - begin->tv_sec;
-    }
-    return (float) (*sec) * 1000 + ((float) (*nsec)) / 1000000.0;
-}
-
-const float **matrixCreationNByN(int r, int c) {
-    float **mat = (float **) malloc(sizeof(float *) * r);
-    for (int i = 0; i < r; ++i) {
-        mat[i] = (float *) malloc(sizeof(float) * c);
-    }
-    for (int j = 0; j < r; ++j) {
-        for (int i = 0; i < c; ++i) {
-            mat[j][i] = rand() % 10 + 1;
+int getArguments(int argc, char *argv[], int *n, short *mat_vec_ver, short *mat_mat_ver, short *c_ver, short *sse_ver,
+                 short *a_vec_ver, short *test, short *listing6) {
+    int c;
+    while ((c = getopt(argc, argv, "n:hvmcsat5")) != -1) {
+        switch (c) {
+            case 'n':
+                *n = atoi(optarg);
+                break;
+            case 'v':
+                *mat_vec_ver = 1;
+                break;
+            case 'c':
+                *c_ver = 1;
+                break;
+            case 's':
+                *sse_ver = 1;
+                break;
+            case 'a':
+                *a_vec_ver = 1;
+                break;
+            case '5':
+                *listing6 = 1;
+                break;
+            case 'm':
+                *mat_mat_ver = 1;
+                break;
+            case 't':
+                *test = 1;
+                break;
+            case 'h':
+                printf("-m\t\t\t-\trun the matrix X matrix version.\n");
+                printf("-v\t\t\t-\trun the matrix X vector version.\n");
+                printf("-c\t\t\t-\trun the simple version.\n");
+                printf("-s\t\t\t-\trun the sse version.\n");
+                printf("-a\t\t\t-\trun the auto vectorized version.\n");
+                printf("-t\t\t\t-\trun all versions and verify against simple version.\n");
+                printf("-h\t\t\t-\tShow this menu\n");
+                printf("example for the assignment.\n");
+                printf("eg : ./aca_lab3 -n 100 -vc\n");
+                printf("\t Run with matrix size 100x100(n), vector size 100(n), simple version(c) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 10 -vs\n");
+                printf("\t Run with matrix size 10x10(n), vector size 10(n), sse version(s) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 100 -vt\n");
+                printf("\t Run with matrix size 100x100(n), vector size 100(n), verification phase(t) - matrix-vector (v)\n");
+                printf("eg : ./aca_lab3 -n 100 -mc\n");
+                printf("\t Run with two matrices of size 100x100(n) simple version(c) - matrix-matrix (m)\n");
+                break;
+            case '?':
+                if (optopt == 'n') {
+                    fprintf(stderr, "Option -n requires an integer point argument\n");
+                } else {
+                    fprintf(stderr, "Unknown option character\n");
+                }
+                return 1;
+            default:
+                abort();
         }
     }
-    return (const float **)mat;
 }
 
-float **matrixCreationNByN_Empty(int r, int c) {
-    float **mat = (float **) malloc(sizeof(float *) * r);
-    for (int i = 0; i < r; ++i) {
-        mat[i] = (float *) malloc(sizeof(float) * c);
-    }
-    for (int j = 0; j < r; ++j) {
-        for (int i = 0; i < c; ++i) {
-            mat[j][i] = 0;
+void matrixCreationNByN_1D(int r, int c, float **mat_a) {
+    *mat_a = _mm_malloc(sizeof(**mat_a) * r * c, XMM_ALIGNMENT_BYTES);
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            (*mat_a)[i * c + j] = ((7 * i + j) & 0x0F) * 0x1P-2F;
         }
     }
-    return mat;
 }
 
-void freeNMat(float **mat, int n) {
-    for (int i = 0; i < n; ++i) {
-        free(mat[i]);
-    }
-    free(mat);
-}
-
-void printNByCMat(const float **mat, int n, int c) {
+void printNByCMat(const float *mat, int n, int c) {
     if (mat != NULL) {
         for (int j = 0; j < n; ++j) {
             for (int i = 0; i < c; ++i) {
-                printf("%3.3f  ", mat[j][i]);
+                printf("%3.3f  ", mat[j * n + i]);
             }
             printf("\n");
         }
     }
 }
 
-const float *vectorCreation(int n) {
-    float *vec = (float *) malloc(sizeof(float) * n);
-    for (int j = 0; j < n; ++j) {
-        vec[j] = rand() % 10 + 1;
-    }
-    return vec;
-}
+
 
 void printVector(const float *vec, int n) {
     for (int i = 0; i < n; ++i) {
@@ -145,4 +159,11 @@ void cleanVector(float *vec, int n) {
     for (int i = 0; i < n; ++i) {
         vec[i] = 0;
     }
+}
+
+void print_vector_ps(__m128 v) {
+    const float *sv = (float *) &v;
+
+    printf("%f %f %f %f\n",
+           sv[0], sv[1], sv[2], sv[3]);
 }
