@@ -7,10 +7,17 @@
 #include <getopt.h>
 #include <math.h>
 #include <float.h>
-#include <time.h>
 #include <unistd.h>
 #include "main_drivers.h"
 #include "util.h"
+
+//#define DEBUG
+
+#ifdef DEBUG
+#define COLUMNS 4
+#else
+#define COLUMNS 200
+#endif
 
 
 int main(int argc, char *argv[]) {
@@ -19,7 +26,7 @@ int main(int argc, char *argv[]) {
     const float **mat0 = NULL, **mat1 = NULL, *in_vec = NULL;
     float **mat_ans_c = NULL, **mat_ans_sse = NULL, **mat_ans_auto = NULL;
     float *out_vec_simple = NULL, *out_vec_sse = NULL, *out_vec_auto = NULL, *out_vec_simple_list6 = NULL;
-    int cols = 200;
+    int cols = COLUMNS;
     time_t t;
     srand((unsigned) time(&t));
 
@@ -81,17 +88,24 @@ int main(int argc, char *argv[]) {
         }
     }
     // matrix creation
+#ifdef DEBUG
+    n = 8;
+    t = 1;
+    mat_mat_ver = 1;
+    mat_vec_ver = 1;
+#endif
     mat0 = matrixCreationNByN(n, n);
 
     if (mat_vec_ver) {
         printf("Program will create %d x %d matrix and a %dx1 vector for calculations\n", n, n, n);
         // vector creation
         in_vec = vectorCreation(n);
-        //TODO : Remove from release
-//        printf("Input Matrix\n");
-//        printNByCMat(mat0, n);
-//        printf("Input Vector\n");
-//        printVector(in_vec, n);
+#ifdef DEBUG
+        printf("Input Matrix\n");
+        printNByCMat(mat0, n, n);
+        printf("Input Vector\n");
+        printVector(in_vec, n);
+#endif
         // run 10 times get the average time
         if (c_ver || test) {
             sleep(1);
@@ -167,20 +181,25 @@ int main(int argc, char *argv[]) {
             free((float *) out_vec_auto);
             out_vec_auto = NULL;
         }
-    } else if (mat_mat_ver) {
+    }
+    if (mat_mat_ver) {
         printf("Program will create random one %d x %d matrix and one %d x 200 matrix for calculations\n", n, n, n);
         mat1 = matrixCreationNByN(n, cols);
-//        printf("Matrix A\n");
-//        printNByCMat(mat0, n, n);
-//        printf("Matrix B\n");
-//        printNByCMat(mat1, n, cols);
+#ifdef DEBUG
+        printf("Matrix A\n");
+        printNByCMat(mat0, n, n);
+        printf("Matrix B\n");
+        printNByCMat(mat1, n, cols);
+#endif
         if (c_ver || test) {
             sleep(1);
             mat_ans_c = matrixCreationNByN_Empty(n, cols);
             printf("\nRunning mxm listing 7 C Program\n");
             driveMatMatCPU(mat0, mat1, mat_ans_c, n, cols);
-//            printf("Matrix mat_ans_c\n");
-//            printNByCMat(mat_ans_c, n, cols);
+#ifdef DEBUG
+            printf("Matrix mat_ans_c\n");
+            printNByCMat(mat_ans_c, n, cols);
+#endif
         }
 
         if (sse_ver || test) {
@@ -188,8 +207,10 @@ int main(int argc, char *argv[]) {
             mat_ans_sse = matrixCreationNByN_Empty(n, cols);
             printf("\nRunning mxm listing 7 SSE version\n");
             driveMatMat_SSE(mat0, mat1, mat_ans_sse, n, cols);
-//            printf("Matrix mat_ans_sse\n");
-//            printNByCMat(mat_ans_sse, n, cols);
+#ifdef DEBUG
+            printf("Matrix mat_ans_sse\n");
+            printNByCMat(mat_ans_sse, n, cols);
+#endif
         }
 
         if (a_vec_ver || test) {
@@ -206,11 +227,8 @@ int main(int argc, char *argv[]) {
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < cols; ++j) {
                     error_sse_simple += fabsf(mat_ans_c[i][j] - mat_ans_sse[i][j]);
-//                    printf("mat_ans_c[i][j] %f\n",mat_ans_c[i][j]);
-//                    printf("mat_ans_sse[i][j] %f\n",mat_ans_sse[i][j]);
                 }
             }
-//            printf("\tERROR : %f\n", error_sse_simple);
             if (error_sse_simple > FLT_EPSILON || isnanf(error_sse_simple)) {
                 printf("\tListing 7 SSE mxm version verified against listing 7 C Program - NOT OK\n");
             } else {
