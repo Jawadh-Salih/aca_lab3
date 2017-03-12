@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     printf("Starting calculation...\n");
     printf("All the times are shown in micro seconds...\n");
     if (mat_vec_ver) {
-        printf("Program will create %d x %d matrix and a %dx%d vector for calculations\n", n, n, n, cols);
+        printf("Program will create %d x %d matrix and a %dx1 vector for calculations\n", n, n, n);
         // vector creation
         matrixCreationNByN_1D(n, 1, &in_vec);
         checkMem(in_vec)
