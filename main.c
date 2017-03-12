@@ -55,8 +55,8 @@ int main(int argc, char *argv[]) {
     matrixCreationNByN_1D(n, n, &mat0);
     checkMem(mat0)
 
-    assert(!(n & 0x3));
-    assert(!(cols & 0x3));
+    assert(!(n & 0x3) & !(cols & 0x3) && "Dimension of matrix and vectors should be multiple of 4");
+
     printf("Starting calculation...\n");
     printf("All the times are shown in micro seconds...\n");
     if (mat_vec_ver) {
@@ -75,29 +75,24 @@ int main(int argc, char *argv[]) {
         if (c_ver || test) {
             out_vec_simple = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
             checkMem(out_vec_simple)
-            memset(out_vec_simple, 0, sizeof(float) * n);
             printf("\nRunning listing 5 C Program\n");
             driveMatVecCPU_listing5(mat0, in_vec, out_vec_simple, n);
-//            printVector(out_vec_simple, n);
         }
         if (listing6 || test) {
             out_vec_simple_list6 = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
             checkMem(out_vec_simple_list6)
-            memset(out_vec_simple_list6, 0, sizeof(float) * n);
             printf("\nRunning listing 6 C Program\n");
             driveMatVecCPU_listing6(mat0, in_vec, out_vec_simple_list6, n);
         }
         if (sse_ver || test) {
             out_vec_sse = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
             checkMem(out_vec_sse)
-            memset(out_vec_sse, 0, sizeof(float) * n);
             printf("\nRunning sse version\n");
             driveMatVecSSE(mat0, in_vec, out_vec_sse, n);
         }
         if (a_vec_ver || test) {
             out_vec_auto = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
             checkMem(out_vec_auto)
-            memset(out_vec_auto, 0, sizeof(float) * n);
             printf("\nRunning auto vectorized version\n");
             driveMatVecAuto(mat0, in_vec, out_vec_auto, n);
         }
@@ -148,6 +143,7 @@ int main(int argc, char *argv[]) {
     if (mat_mat_ver) {
         printf("Program will create random one %d x %d matrix and one %d x 200 matrix for calculations\n", n, n, n);
         matrixCreationNByN_1D(n, cols, &mat1);
+        checkMem(mat1)
 #ifdef DEBUG
         printf("Matrix A\n");
         printNByCMat(mat0, n, n);
@@ -155,7 +151,8 @@ int main(int argc, char *argv[]) {
         printNByCMat(mat1, n, cols);
 #endif
         if (c_ver || test) {
-            matrixCreationNByN_1D(n, cols, &mat_ans_c);
+            mat_ans_c = _mm_malloc(sizeof(float) * n * cols, XMM_ALIGNMENT_BYTES);
+            checkMem(mat_ans_c)
             printf("\nRunning mxm listing 7 C Program\n");
             driveMatMatCPU(mat0, mat1, mat_ans_c, n, cols);
 #ifdef DEBUG
@@ -165,8 +162,8 @@ int main(int argc, char *argv[]) {
         }
 
         if (sse_ver || test) {
-            sleep(1);
-            matrixCreationNByN_1D(n, cols, &mat_ans_sse);
+            mat_ans_sse = _mm_malloc(sizeof(float) * n * cols, XMM_ALIGNMENT_BYTES);
+            checkMem(mat_ans_sse)
             printf("\nRunning mxm listing 7 SSE version\n");
             driveMatMat_SSE(mat0, mat1, mat_ans_sse, n, cols);
 #ifdef DEBUG
@@ -176,8 +173,8 @@ int main(int argc, char *argv[]) {
         }
 
         if (a_vec_ver || test) {
-            sleep(1);
-            matrixCreationNByN_1D(n, cols, &mat_ans_auto);
+            mat_ans_auto = _mm_malloc(sizeof(float) * n * cols, XMM_ALIGNMENT_BYTES);
+            checkMem(mat_ans_auto)
             printf("\nRunning mxm listing 7 auto vectorized version\n");
             driveMatMatAuto(mat0, mat1, mat_ans_auto, n, cols);
         }
@@ -188,7 +185,7 @@ int main(int argc, char *argv[]) {
             float error_sse_simple = 0;
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < cols; ++j) {
-                    error_sse_simple += fabsf(mat_ans_c[MINDEX(i, j, cols)] - mat_ans_sse[MINDEX(i, j, cols)]);
+                    error_sse_simple += fabsf(mat_ans_c[i * cols + j] - mat_ans_sse[i * cols + j]);
                 }
             }
             if (error_sse_simple > FLT_EPSILON || isnanf(error_sse_simple)) {
@@ -201,7 +198,7 @@ int main(int argc, char *argv[]) {
             float error_auto_simple = 0;
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < cols; ++j) {
-                    error_auto_simple += fabsf(mat_ans_c[MINDEX(i, j, cols)] - mat_ans_auto[MINDEX(i, j, cols)]);
+                    error_auto_simple += fabsf(mat_ans_c[i * cols + j] - mat_ans_auto[i * cols + j]);
                 }
             }
 
@@ -213,7 +210,9 @@ int main(int argc, char *argv[]) {
         }
 
         _mm_free(mat1);
-
+        _mm_free(mat_ans_c);
+        _mm_free(mat_ans_sse);
+        _mm_free(mat_ans_auto);
     }
 
     _mm_free(mat0);

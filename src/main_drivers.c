@@ -21,14 +21,11 @@ void driveMatMatCPU(const float *mat_a, const float *mat_b, float *mat_c, int n,
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
-    float times[10] = {};
+    float times[10];
     int req_n;
     for (int i = 0; i < 10; ++i) {
         memset(mat_c, 0, sizeof(float) * n * cols);GET_TIME(t0);
-        matmat_listing7(mat_c, n, n, mat_a, cols, mat_b);
-//        matmat_listing7(float **mat_c, int a_h, int com_n,
-//        const float **mat_a, int b_w, const float **mat_b)
-        GET_TIME(t1);
+        matmat_listing7(mat_c, n, n, mat_a, cols, mat_b);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
     }
@@ -58,11 +55,11 @@ void driveMatMat_SSE(const float *mat_a, const float *mat_b, float *mat_c, int n
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
-    float times[10] = {};
+    float times[10];
     int req_n;
     for (int i = 0; i < 10; ++i) {
         memset(mat_c, 0, sizeof(float) * n * cols);GET_TIME(t0);
-        matmat_listing7_sse(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
+        matmat_listing7_sse(mat_c, n, n, mat_a, cols, mat_b);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
     }
@@ -76,7 +73,7 @@ void driveMatMat_SSE(const float *mat_a, const float *mat_b, float *mat_c, int n
         printf("Automatically running with required sample size");
         for (int i = 0; i < req_n; ++i) {
             memset(mat_c, 0, sizeof(float) * n * cols);GET_TIME(t0);
-            matmat_listing7_sse(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
+            matmat_listing7_sse(mat_c, n, n, mat_a, cols, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
         }
@@ -92,11 +89,11 @@ void driveMatMatAuto(const float *mat_a, const float *mat_b, float *mat_c, int n
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
-    float times[10] = {};
+    float times[10];
     int req_n;
     for (int i = 0; i < 10; ++i) {
         memset(mat_c, 0, sizeof(float) * n * cols);GET_TIME(t0);
-        matmat_auto(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
+        matmat_auto(mat_c, n, n, mat_a, cols, mat_b);GET_TIME(t1);
         float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
         times[i] = el_t;
     }
@@ -110,7 +107,7 @@ void driveMatMatAuto(const float *mat_a, const float *mat_b, float *mat_c, int n
         printf("Automatically running with required sample size");
         for (int i = 0; i < req_n; ++i) {
             memset(mat_c, 0, sizeof(float) * n * cols);GET_TIME(t0);
-            matmat_auto(n, cols, mat_c, mat_a, mat_b);GET_TIME(t1);
+            matmat_auto(mat_c, n, n, mat_a, cols, mat_b);GET_TIME(t1);
             float el_t = elapsed_time_microsec(&t0, &t1, &sec, &nsec);
             times_2[i] = el_t;
 
@@ -128,7 +125,7 @@ void driveMatVecCPU_listing5(const float *mat, const float *vec_in, float *vec_o
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
-    float times[10] = {};
+    float times[10];
     int req_n = 10;
     for (int i = 0; i < 10; ++i) {
         memset(vec_out, 0, sizeof(float) * n);GET_TIME(t0);
@@ -162,7 +159,7 @@ void driveMatVecCPU_listing6(const float *mat, const float *vec_in, float *vec_o
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
-    float times[10] = {};
+    float times[10];
     int req_n;
     for (int i = 0; i < 10; ++i) {
         memset(vec_out, 0, sizeof(float) * n);GET_TIME(t0);
@@ -239,7 +236,7 @@ void driveMatVecAuto(const float *mat, const float *vec_in, float *vec_out, int 
     struct timespec t0, t1;
     unsigned long sec, nsec;
     float mean, sd;
-    float times[10] = {};
+    float times[10];
     int req_n;
     for (int i = 0; i < 10; ++i) {
         memset(vec_out, 0, sizeof(float) * n);GET_TIME(t0);

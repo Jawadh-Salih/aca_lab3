@@ -14,6 +14,6 @@ void matvec_unrolled_sse_quite(int n, float *vec_c, const float *mat_a, const fl
 
 void matvec_unrolled_16sse(int n, float *vec_c, const float *mat_a, const float *vec_b);
 
-void matmat_listing7_sse(int n, int c, float **mat_c, const float **mat_a, const float **mat_b);
+void matmat_listing7_sse(float *mat_c, int a_h, int com_n, const float *mat_a, int b_w, const float *mat_b);
 
 #endif //ACA_LAB3_SSE_METHODS_H

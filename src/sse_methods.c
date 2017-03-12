@@ -90,16 +90,16 @@ void matvec_unrolled_16sse(int n, float *vec_c, const float *mat_a, const float 
 //    printVector(vec_c, n);
 }
 
-void matmat_listing7_sse(int n, int c, float **mat_c, const float **mat_a, const float **mat_b) {
+void matmat_listing7_sse(float *mat_c, int a_h, int n, const float *mat_a, int b_w, const float *mat_b) {
     for (int i = 0; i < n; i += 1) {
         for (int j = 0; j < n; j += 1) {
-            __m128 x0 = _mm_set1_ps(mat_a[i][j]);
-            for (int k = 0; k < c; k = k + 4) {
-                __m128 temp = _mm_loadu_ps(&mat_c[i][k]);
-                __m128 v0 = _mm_loadu_ps(&mat_b[j][k]);
+            __m128 x0 = _mm_set1_ps(mat_a[i * n + j]);
+            for (int k = 0; k < b_w; k += 4) {
+                __m128 temp = _mm_loadu_ps(&mat_c[i * b_w + k]);
+                __m128 v0 = _mm_loadu_ps(&mat_b[j * b_w + k]);
                 __m128 m0 = _mm_mul_ps(x0, v0);
                 temp = _mm_add_ps(m0, temp);
-                _mm_storeu_ps(&mat_c[i][k], temp);
+                _mm_storeu_ps(&mat_c[i * b_w + k], temp);
             }
         }
     }
