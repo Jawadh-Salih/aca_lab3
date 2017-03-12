@@ -27,7 +27,6 @@ target_link_libraries(aca_lab3 m)
 
 include(CTest)
 enable_testing()
-
 # Does application run
 add_test(aca_lab3Dorun aca_lab3 -h)
 set_tests_properties(aca_lab3Dorun PROPERTIES PASS_REGULAR_EXPRESSION "Show this menu")
@@ -39,3 +38,4 @@ add_test(aca_lab3vt4 aca_lab3 -n 4 -vt)
 set_tests_properties(aca_lab3vt4 PROPERTIES PASS_REGULAR_EXPRESSION "(SSE.*version verified against listing 5 C Program - OK)\
 .*(Listing 6 C Program verified against listing 5 C Program - OK)\
 .*(Auto vectorized version verified against simple version - OK)")
+set(CTEST_PARALLEL_LEVEL 3)
