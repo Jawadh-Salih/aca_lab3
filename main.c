@@ -4,189 +4,217 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include<pmmintrin.h>
 #include <getopt.h>
-#include <time.h>
 #include <math.h>
 #include <float.h>
+#include <unistd.h>
+#include <assert.h>
+#include <string.h>
+#include "main_drivers.h"
 #include "util.h"
-#include "matvec_drivers.h"
-#include "matmat_drivers.h"
 
+//#define DEBUG
+
+#ifdef DEBUG
+#define COLUMNS 4
+#else
+#define COLUMNS 200
+#endif
+
+#define XMM_ALIGNMENT_BYTES 16
+
+#define checkMem(mem) if(!mem){fprintf(stderr, "Memory allocation failed\n"),abort();}
+
+static float *mat0 __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *mat1 __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *mat_ans_c __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *mat_ans_sse __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *mat_ans_auto __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *in_vec __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *out_vec_simple __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *out_vec_sse __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *out_vec_auto __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+static float *out_vec_simple_list6 __attribute__((aligned (XMM_ALIGNMENT_BYTES)));
+
+short mat_vec_ver = 0, mat_mat_ver = 0, c_ver = 0, sse_ver = 0, a_vec_ver = 0, test = 0, listing6;
 
 int main(int argc, char *argv[]) {
-    printf("Starting calculation...\n");
-    int c, n = 4;
-    const float **mat0 = NULL, **mat1 = NULL, *in_vec = NULL;
-    float **mat_ans_c = NULL, **mat_ans_sse = NULL;
-    float *out_vec_simple = NULL, *out_vec_sse = NULL, *out_vec_auto = NULL;
 
+    int n, cols = COLUMNS;
     time_t t;
     srand((unsigned) time(&t));
+    getArguments(argc, argv, &n, &mat_vec_ver, &mat_mat_ver, &c_ver, &sse_ver, &a_vec_ver, &test, &listing6);
 
-    short mat_vec_ver = 0, mat_mat_ver = 0, c_ver = 0, sse_ver = 0, a_vec_ver = 0, test = 0;
+#ifdef DEBUG
+    n = 8;
+    t = 1;
+    mat_mat_ver = 1;
+    mat_vec_ver = 1;
+#endif
+    matrixCreationNByN_1D(n, n, &mat0);
+    checkMem(mat0)
 
-    while ((c = getopt(argc, argv, "n:hvmcsat")) != -1) {
-        switch (c) {
-            case 'n':
-                n = atoi(optarg);
-                break;
-            case 'v':
-                mat_vec_ver = 1;
-                break;
-            case 'c':
-                c_ver = 1;
-                break;
-            case 's':
-                sse_ver = 1;
-                break;
-            case 'a':
-                a_vec_ver = 1;
-                break;
-            case 'm':
-                mat_mat_ver = 1;
-                break;
-            case 't':
-                test = 1;
-                break;
-            case 'h':
-                printf("-m\t\t\t-\trun the matrix X matrix version.\n");
-                printf("-v\t\t\t-\trun the matrix X vector version.\n");
-                printf("-c\t\t\t-\trun the simple version.\n");
-                printf("-s\t\t\t-\trun the sse version.\n");
-                printf("-a\t\t\t-\trun the auto vectorized version.\n");
-                printf("-t\t\t\t-\trun all versions and verify against simple version.\n");
-                printf("-h\t\t\t-\tShow this menu\n");
-                printf("example for the assignment.\n");
-                printf("eg : ./aca_lab3 -n 100 -vc\n");
-                printf("\t Run with matrix size 100x100(n), vector size 100(n), simple version(c) - matrix-vector (v)\n");
-                printf("eg : ./aca_lab3 -n 10 -vs\n");
-                printf("\t Run with matrix size 10x10(n), vector size 10(n), sse version(s) - matrix-vector (v)\n");
-                printf("eg : ./aca_lab3 -n 100 -vt\n");
-                printf("\t Run with matrix size 100x100(n), vector size 100(n), verification phase(t) - matrix-vector (v)\n");
-                printf("eg : ./aca_lab3 -n 100 -mc\n");
-                printf("\t Run with two matrices of size 100x100(n) simple version(c) - matrix-matrix (m)\n");
-                break;
-            case '?':
-                if (optopt == 'n') {
-                    fprintf(stderr, "Option -n requires an integer point argument\n");
-                } else {
-                    fprintf(stderr, "Unknown option character\n");
-                }
-                return 1;
-            default:
-                abort();
-        }
-    }
-    // matrix creation
-    mat0 = matrixCreationNByN(n);
+    assert(!(n & 0x3) & !(cols & 0x3) && "Dimension of matrix and vectors should be multiple of 4");
 
+    printf("Starting calculation...\n");
+    printf("All the times are shown in micro seconds...\n");
     if (mat_vec_ver) {
         printf("Program will create %d x %d matrix and a %dx1 vector for calculations\n", n, n, n);
         // vector creation
-        in_vec = vectorCreation(n);
-        //TODO : Remove from release
-//        printf("Input Matrix\n");
-//        printNByNMat(mat0, n);
-//        printf("Input Vector\n");
-//        printVector(in_vec, n);
+        matrixCreationNByN_1D(n, 1, &in_vec);
+        checkMem(in_vec)
+
+#ifdef DEBUG
+        printf("Input Matrix\n");
+        printNByCMat(mat0, n, n);
+        printf("Input Vector\n");
+        printVector(in_vec, n);
+#endif
         // run 10 times get the average time
         if (c_ver || test) {
-            out_vec_simple = (float *) malloc(sizeof(float) * n);
-            printf("\nRunning simple version\n");
-            driveMatVecCPU(mat0, in_vec, out_vec_simple, n);
-            //TODO : Remove from release
-//            printf("Output Vector\n");
-//            printVector(out_vec_simple, n);
+            out_vec_simple = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
+            checkMem(out_vec_simple)
+            printf("\nRunning listing 5 C Program\n");
+            driveMatVecCPU_listing5(mat0, in_vec, out_vec_simple, n);
+        }
+        if (listing6 || test) {
+            out_vec_simple_list6 = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
+            checkMem(out_vec_simple_list6)
+            printf("\nRunning listing 6 C Program\n");
+            driveMatVecCPU_listing6(mat0, in_vec, out_vec_simple_list6, n);
         }
         if (sse_ver || test) {
-            out_vec_sse = (float *) malloc(sizeof(float) * n);
+            out_vec_sse = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
+            checkMem(out_vec_sse)
             printf("\nRunning sse version\n");
             driveMatVecSSE(mat0, in_vec, out_vec_sse, n);
-            //TODO : Remove from release
-//            printf("Output Vector\n");
-//            printVector(out_vec_sse, n);
         }
         if (a_vec_ver || test) {
-            out_vec_auto = (float *) malloc(sizeof(float) * n);
+            out_vec_auto = _mm_malloc(sizeof(float) * n, XMM_ALIGNMENT_BYTES);
+            checkMem(out_vec_auto)
             printf("\nRunning auto vectorized version\n");
-
+            driveMatVecAuto(mat0, in_vec, out_vec_auto, n);
         }
-        free((float *) in_vec);
 
+        _mm_free(in_vec);
         if (test) {
             printf("\nVerifying matrix vector multiplication\n");
-            printf("Verifying sse and simple...\n");
+            printf("Verifying sse (listing 6) and listing 5 C Program.\n");
             float error_sse_simple = 0;
             for (int i = 0; i < n; ++i) {
-                error_sse_simple += fabs(out_vec_simple[i] - out_vec_sse[i]);
+                error_sse_simple += fabsf(out_vec_simple[i] - out_vec_sse[i]);
             }
 
-            if (error_sse_simple > 0.01) {
-                printf("\tSSE version verified against simple version - NOT OK\n");
+            if (error_sse_simple > FLT_EPSILON || isnanf(error_sse_simple)) {
+                printf("\tSSE (listing 6) version verified against listing 5 C Program - NOT OK\n");
             } else {
-                printf("\tSSE version verified against simple version - OK\n");
+                printf("\tSSE (listing 6) version verified against listing 5 C Program - OK\n");
             }
+            printf("Verifying Listing 6 C and listing 5 C Program.\n");
+            float error_list6_simple = 0;
+            for (int i = 0; i < n; ++i) {
+                error_list6_simple += fabsf(out_vec_simple_list6[i] - out_vec_simple[i]);
+            }
+
+            if (error_list6_simple > FLT_EPSILON || isnanf(error_list6_simple)) {
+                printf("\tListing 6 C Program verified against listing 5 C Program - NOT OK\n");
+            } else {
+                printf("\tListing 6 C Program verified against listing 5 C Program - OK\n");
+            }
+
             printf("Verifying auto and simple...\n");
             float error_auto_simple = 0;
             for (int i = 0; i < n; ++i) {
-                error_auto_simple += fabs(out_vec_auto[i] - out_vec_sse[i]);
+                error_auto_simple += fabsf(out_vec_auto[i] - out_vec_simple[i]);
             }
-            if (error_auto_simple > FLT_EPSILON) {
+            if (error_auto_simple > FLT_EPSILON || isnanf(error_auto_simple)) {
                 printf("\tAuto vectorized version verified against simple version - NOT OK\n");
             } else {
                 printf("\tAuto vectorized version verified against simple version - OK\n");
             }
         }
-        if (out_vec_simple != NULL) {
-            free((float *) out_vec_simple);
-            out_vec_simple = NULL;
-        }
-        if (out_vec_sse != NULL) {
-            free((float *) out_vec_sse);
-            out_vec_sse = NULL;
-        }
-        if (out_vec_auto != NULL) {
-            free((float *) out_vec_auto);
-            out_vec_auto = NULL;
-        }
-    } else if (mat_mat_ver) {
-        printf("Program will create two %d x %d matrices for calculations\n", n, n);
-        mat1 = matrixCreationNByN(n);
-        mat_ans_c = matrixCreationNByN(n);
-        mat_ans_sse = matrixCreationNByN(n);
+
+        _mm_free(out_vec_simple);
+        _mm_free(out_vec_simple_list6);
+        _mm_free(out_vec_sse);
+        _mm_free(out_vec_auto);
+    }
+    if (mat_mat_ver) {
+        printf("Program will create random one %d x %d matrix and one %d x 200 matrix for calculations\n", n, n, n);
+        matrixCreationNByN_1D(n, cols, &mat1);
+        checkMem(mat1)
+#ifdef DEBUG
+        printf("Matrix A\n");
+        printNByCMat(mat0, n, n);
+        printf("Matrix B\n");
+        printNByCMat(mat1, n, cols);
+#endif
         if (c_ver || test) {
-            printf("\nRunning simple version\n");
-            driveMatMatCPU(mat0, mat1, mat_ans_c, n);
+            mat_ans_c = _mm_malloc(sizeof(float) * n * cols, XMM_ALIGNMENT_BYTES);
+            checkMem(mat_ans_c)
+            printf("\nRunning mxm listing 7 C Program\n");
+            driveMatMatCPU(mat0, mat1, mat_ans_c, n, cols);
+#ifdef DEBUG
+            printf("Matrix mat_ans_c\n");
+            printNByCMat(mat_ans_c, n, cols);
+#endif
         }
 
         if (sse_ver || test) {
-            out_vec_sse = (float *) malloc(sizeof(float) * n);
-            printf("\nRunning sse version\n");
-            driveMatMat_SSE(mat0, mat1, mat_ans_sse, n);
+            mat_ans_sse = _mm_malloc(sizeof(float) * n * cols, XMM_ALIGNMENT_BYTES);
+            checkMem(mat_ans_sse)
+            printf("\nRunning mxm listing 7 SSE version\n");
+            driveMatMat_SSE(mat0, mat1, mat_ans_sse, n, cols);
+#ifdef DEBUG
+            printf("Matrix mat_ans_sse\n");
+            printNByCMat(mat_ans_sse, n, cols);
+#endif
+        }
+
+        if (a_vec_ver || test) {
+            mat_ans_auto = _mm_malloc(sizeof(float) * n * cols, XMM_ALIGNMENT_BYTES);
+            checkMem(mat_ans_auto)
+            printf("\nRunning mxm listing 7 auto vectorized version\n");
+            driveMatMatAuto(mat0, mat1, mat_ans_auto, n, cols);
         }
 
         if (test) {
             printf("\nVerifying matrix matrix multiplication\n");
-            printf("Verifying sse and simple...\n");
+            printf("Verifying listing 7 SSE and listing 7 C Program\n");
             float error_sse_simple = 0;
             for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < n; ++j) {
-                    error_sse_simple += fabs(mat_ans_c[i][j] - mat_ans_sse[i][j]);
+                for (int j = 0; j < cols; ++j) {
+                    error_sse_simple += fabsf(mat_ans_c[i * cols + j] - mat_ans_sse[i * cols + j]);
+                }
+            }
+            if (error_sse_simple > FLT_EPSILON || isnanf(error_sse_simple)) {
+                printf("\tListing 7 SSE mxm version verified against listing 7 C Program - NOT OK\n");
+            } else {
+                printf("\tListing 7 SSE mxm version verified against listing 7 C Program - OK\n");
+            }
+
+            printf("Verifying listing 7 auto vectorized version and listing 7 C Program.\n");
+            float error_auto_simple = 0;
+            for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < cols; ++j) {
+                    error_auto_simple += fabsf(mat_ans_c[i * cols + j] - mat_ans_auto[i * cols + j]);
                 }
             }
 
-            if (error_sse_simple > 0.01) {
-                printf("\tSSE version verified against simple version - NOT OK\n");
+            if (error_auto_simple > FLT_EPSILON || isnanf(error_auto_simple)) {
+                printf("\tListing 7 auto vectorized version verified against listing 7 C Program - NOT OK\n");
             } else {
-                printf("\tSSE version verified against simple version - OK\n");
+                printf("\tListing 7 auto vectorized version verified against listing 7 C Program - OK\n");
             }
         }
-        freeNByNMat((float **) mat1, n);
-        mat1 = NULL;
+
+        _mm_free(mat1);
+        _mm_free(mat_ans_c);
+        _mm_free(mat_ans_sse);
+        _mm_free(mat_ans_auto);
     }
 
-    freeNByNMat((float **) mat0, n);
+    _mm_free(mat0);
     mat0 = NULL;
     return 0;
 }
