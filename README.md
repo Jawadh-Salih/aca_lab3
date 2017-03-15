@@ -20,7 +20,7 @@ SSE Implementations
 * ** In matrix matrix multiplication test second matrix column size is hardcoded as 200,
   change `#define COLUMNS 200` in main.c to change it
 * make sure all the dimensions are **multiple of 4**, since we have assumed it on loop unrolling and
-    no checkings are done in runtime to avoid program crash due to bad inputs
+    no checking is done in release build at runtime to avoid program crash due to bad inputs
 
 ###Building the Project
 Create a folder inside the project. `eg : build`. Then within the folder
